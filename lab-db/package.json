@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --no-warnings --test \"test/**/*.test.ts\"",
-    "db:seed": "prisma generate && node --no-warnings --experimental-sqlite prisma/seed.mjs"
+    "db:seed": "prisma generate && node --no-warnings --experimental-sqlite prisma/seed.mjs",
+    "db:seed:demo": "node --no-warnings --experimental-sqlite prisma/seed-demo.mjs"
   },
   "dependencies": {
     "@prisma/client": "^7.8.0",
