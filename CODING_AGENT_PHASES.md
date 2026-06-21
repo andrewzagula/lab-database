@@ -17,9 +17,9 @@ If you choose a different stack, keep the same phases and acceptance checks.
 
 ## Current Status
 
-Phases 0, 1, 2, 3, 4, 5, and 6 are complete. The runnable app scaffold, Prisma SQLite schema, seed/import workflow, relationship-tracing detail pages, create/edit forms, and experiment-plasmid relationship management live in `lab-db/`; the original mock files remain at the repository root.
+Phases 0, 1, 2, 3, 4, 5, 6, and 7 are complete. The runnable app scaffold, Prisma SQLite schema, seed/import workflow, relationship-tracing detail pages, create/edit forms, experiment-plasmid relationship management, and file links with a GenBank metadata preview live in `lab-db/`; the original mock files remain at the repository root.
 
-Verified Phase 0, Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, and Phase 6 state:
+Verified Phase 0, Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, Phase 6, and Phase 7 state:
 
 - Next.js App Router + TypeScript scaffold exists in `lab-db/`.
 - Prisma is initialized for SQLite with `lab-db/prisma/schema.prisma` and `lab-db/prisma.config.ts`.
@@ -48,9 +48,11 @@ Verified Phase 0, Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, and Phase 6 state
 - Phase 5 browser verification created and edited `CON000002`, `PL000002`, and `EXP000002`, confirmed persistence after refresh, and confirmed Phase 4 seeded relationship pages still work.
 - Phase 6 experiment detail pages link and unlink plasmids through `ExperimentPlasmid`. `src/lib/read-db.ts` adds `listPlasmidsNotInExperiment` (mapped to plain objects for the client selector), and `src/lib/write-db.ts` adds duplicate-safe `linkPlasmidToExperiment` / `unlinkPlasmidFromExperiment`; the add selector only offers plasmids that are not already linked.
 - Phase 6 verification linked `EXP000001` to a second plasmid through the real Server Action, confirmed the many-to-many path so `PL000001` appears in multiple experiments, confirmed the selector hides already-linked plasmids, and unlinked back to the seeded `EXP000001 -> PL000001` state.
-- File rows remain metadata/path display only; no upload, delete, download, or file preview behavior has been added.
+- Phase 7 plasmid detail parses linked GenBank files (`src/lib/genbank.ts`) and shows locus, definition, length, topology, and de-duplicated feature labels; files download/open through the `GET /files/[kind]/[id]` route handler backed by `src/lib/files.ts`, which is restricted to the repository root and reachable only by database row id.
+- Phase 7 verification confirmed `PL000001` shows `Example_PL000001.gb` with `pSpCas9(BB)-2A-G`, `9288 bp`, `circular`, and labels `Cas9`, `EGFP`, `AmpR`, `U6 promoter`, `gRNA scaffold`; `EXP000001` shows `EXP1_mock.docx`; the route serves both files with correct content types and returns `404` for unknown ids, bad kinds, and a file removed from disk, where the page shows a clear missing-file state.
+- File upload, delete, and editing remain out of scope; file display is read/download only.
 
-Next coding-agent task: start with Phase 7 only. Add file links and a basic GenBank metadata preview. Do not build upload flows or record deletion yet.
+Next coding-agent task: start with Phase 8 only. Add a test runner with focused tests and surface seed-time data-quality normalizations. Do not build upload flows or record deletion yet.
 
 ## Phase 0: Repository And Stack Setup
 

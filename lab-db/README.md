@@ -23,12 +23,12 @@ Complete:
 - Form validation for required/unique IDs, ID formats, dates, protein sequences, dropdown values, and plasmid construct references
 - Route-level not-found states for missing detail records
 - Link and unlink plasmids to experiments through the `ExperimentPlasmid` join table from the experiment detail page, with duplicate-safe linking and construct context kept visible
+- File download/open route plus a lightweight GenBank metadata preview (locus, definition, length, topology, feature labels) on plasmid detail, and download links on experiment files, with clear missing-file states
 - Root mock files preserved outside this app folder
 
 Not started yet:
 
 - Upload flows
-- File previews/rendering
 - Delete actions for records
 
 ## Run Locally
@@ -141,12 +141,25 @@ The experiment detail page now manages `ExperimentPlasmid` links. `listPlasmidsN
 
 Phase 6 data-access decision: relationship reads and writes follow the existing `node:sqlite` pattern; `ExperimentPlasmid` rows returned to the client selector are mapped to plain objects, matching `listConstructOptions`, because `node:sqlite` rows have a null prototype and cannot cross the Server/Client Component boundary.
 
+Phase 7 verification passed with:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Plasmid detail now parses linked GenBank files with `src/lib/genbank.ts` and renders locus, definition, length, topology, and de-duplicated feature labels. Files are served through the `GET /files/[kind]/[id]` route handler, which looks the row up in the database by id and streams it from `src/lib/files.ts` (`inline` disposition, content type by extension). `PL000001` shows `Example_PL000001.gb` with `pSpCas9(BB)-2A-G`, `9288 bp`, `circular`, and feature labels including `Cas9`, `EGFP`, `AmpR`, `U6 promoter`, and `gRNA scaffold`; `EXP000001` shows `EXP1_mock.docx` with a working download link. Verified the route returns the GenBank text and the Word document with correct content types, returns `404` for unknown ids, bad kinds, and a file removed from disk, and that the detail pages show a clear missing-file state in that case.
+
+Phase 7 data-access/security note: served files are restricted to the repository root (`path.resolve(process.cwd(), "..")`) and are only reachable by their database row id, so a stored path cannot be used to read arbitrary files. Reads stay outside `PrismaClient`, consistent with earlier phases.
+
 ## Next Handoff
 
-Complete Phase 7 only:
+Complete Phase 8 only:
 
-1. Add file links and a basic GenBank metadata preview for plasmid files.
-2. Show download links and parsed summary fields without building a full sequence editor.
-3. Keep upload flows and record deletion out of Phase 7 unless explicitly requested.
+1. Add a test runner and focused tests for seed/import, relationship queries, and validation behavior.
+2. Surface the seed-time data-quality normalizations in a small view or log.
+3. Keep upload flows and record deletion out of Phase 8 unless explicitly requested.
 
 Note: Prisma 7 uses `prisma.config.ts` to load `DATABASE_URL` from `.env` and to configure `npx prisma db seed`; keep that generated config pattern.
