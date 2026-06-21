@@ -8,6 +8,7 @@ const LINKS = [
   ["Constructs", "/constructs"],
   ["Plasmids", "/plasmids"],
   ["Experiments", "/experiments"],
+  ["Explore", "/explore"],
   ["Data quality", "/data-quality"],
 ] as const;
 
