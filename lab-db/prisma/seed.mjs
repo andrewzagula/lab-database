@@ -375,7 +375,7 @@ runTransaction(db, () => {
     path.basename(FILE_LINKS.plasmid),
     FILE_LINKS.plasmid,
     "genbank",
-    "Linked during Phase 2 seed import.",
+    "Linked automatically during data import.",
   );
 
   db.prepare(`
@@ -390,7 +390,7 @@ runTransaction(db, () => {
     path.basename(FILE_LINKS.experimentFile),
     FILE_LINKS.experimentFile,
     "docx",
-    "Linked during Phase 2 seed import.",
+    "Linked automatically during data import.",
   );
 });
 
@@ -442,7 +442,7 @@ const seedReport = {
 const reportPath = path.join(path.dirname(dbPath), "seed-report.json");
 fs.writeFileSync(reportPath, `${JSON.stringify(seedReport, null, 2)}\n`);
 
-console.log("Phase 2 seed import complete.");
+console.log("Seed import complete.");
 console.log(
   `Imported ${construct.id}, ${plasmid.id}, and ${experiment.id}; skipped placeholder rows: ` +
     `CON=${countPlaceholderRows(constructRows, "CONSTRUCT_ID")}, ` +

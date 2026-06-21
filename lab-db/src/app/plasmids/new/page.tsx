@@ -22,7 +22,7 @@ export default function NewPlasmidPage() {
         initialValues={emptyPlasmidValues}
         constructOptions={constructs}
         title="Create plasmid"
-        description="Add a plasmid record and optionally link it to an existing construct. Experiment links are handled in Phase 6."
+        description="Add a plasmid record and optionally link it to an existing construct. Experiment links are managed from each experiment's detail page."
         submitLabel="Create plasmid"
         cancelHref="/plasmids"
       />

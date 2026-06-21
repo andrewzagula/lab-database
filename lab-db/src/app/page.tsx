@@ -93,17 +93,15 @@ export default function Home() {
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="font-mono text-xs font-semibold uppercase text-teal-700">
-              Seeded records
-            </p>
-            <h3 className="mt-1 text-xl font-semibold text-slate-950">
-              Quick links
-            </h3>
-          </div>
-          <p className="text-sm text-slate-600">
-            Detail routes open relationship pages with edit actions.
+        <div>
+          <p className="font-mono text-xs font-semibold uppercase text-teal-700">
+            Seeded records
+          </p>
+          <h3 className="mt-1 text-xl font-semibold text-slate-950">
+            Quick links
+          </h3>
+          <p className="mt-2 text-sm text-slate-600">
+            Open any record to trace its relationships and edit it.
           </p>
         </div>
         <div className="mt-5 grid gap-5 lg:grid-cols-3">

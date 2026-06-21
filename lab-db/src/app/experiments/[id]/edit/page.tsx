@@ -52,7 +52,7 @@ export default async function EditExperimentPage({
         action={updateExperimentAction.bind(null, experiment.id)}
         initialValues={toFormValues(experiment)}
         title={`Edit ${experiment.id}`}
-        description="Update experiment metadata. Linked plasmids and file metadata remain unchanged in Phase 5."
+        description="Update experiment metadata. Linked plasmids and file metadata are managed separately and are not changed here."
         submitLabel="Save experiment"
         cancelHref={`/experiments/${experiment.id}`}
       />

@@ -118,7 +118,7 @@ export function ExperimentForm({
               name="folderPath"
               value={values.folderPath}
               error={errors.folderPath}
-              helper="Stored as metadata only. No upload or preview is added in Phase 5."
+              helper="Stored as metadata only; the folder is referenced by path, not uploaded."
               mono
             />
             <TextField

@@ -99,7 +99,7 @@ export function PlasmidForm({
               name="constructId"
               value={values.constructId}
               error={errors.constructId}
-              helper="Choose an existing construct. Experiment links are managed in Phase 6."
+              helper="Choose an existing construct. Experiment links are managed from each experiment's detail page."
               options={constructs}
               blankLabel="No construct"
             />

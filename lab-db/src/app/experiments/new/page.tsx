@@ -18,7 +18,7 @@ export default function NewExperimentPage() {
         action={createExperimentAction}
         initialValues={emptyExperimentValues}
         title="Create experiment"
-        description="Add an experiment record. Plasmid relationship management is reserved for Phase 6."
+        description="Add an experiment record. Once it exists, link plasmids to it from its detail page."
         submitLabel="Create experiment"
         cancelHref="/experiments"
       />

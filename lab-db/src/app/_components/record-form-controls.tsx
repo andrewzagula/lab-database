@@ -98,7 +98,6 @@ export function TextField({
       <label htmlFor={name} className="text-sm font-semibold text-slate-950">
         {label}
       </label>
-      {helper ? <p className="mt-1 text-xs leading-5 text-slate-500">{helper}</p> : null}
       <input
         id={name}
         name={name}
@@ -108,6 +107,7 @@ export function TextField({
         aria-invalid={Boolean(error)}
         className={mono ? `${inputClassName} mt-2 font-mono` : `${inputClassName} mt-2`}
       />
+      {helper ? <p className="mt-2 text-xs leading-5 text-slate-500">{helper}</p> : null}
       {error ? <p className="mt-2 text-sm text-rose-700">{error}</p> : null}
     </div>
   );
@@ -132,7 +132,6 @@ export function TextAreaField({
       <label htmlFor={name} className="text-sm font-semibold text-slate-950">
         {label}
       </label>
-      {helper ? <p className="mt-1 text-xs leading-5 text-slate-500">{helper}</p> : null}
       <textarea
         id={name}
         name={name}
@@ -142,6 +141,7 @@ export function TextAreaField({
         aria-invalid={Boolean(error)}
         className={mono ? `${textareaClassName} mt-2 font-mono` : `${textareaClassName} mt-2`}
       />
+      {helper ? <p className="mt-2 text-xs leading-5 text-slate-500">{helper}</p> : null}
       {error ? <p className="mt-2 text-sm text-rose-700">{error}</p> : null}
     </div>
   );
@@ -164,7 +164,6 @@ export function SelectField({
       <label htmlFor={name} className="text-sm font-semibold text-slate-950">
         {label}
       </label>
-      {helper ? <p className="mt-1 text-xs leading-5 text-slate-500">{helper}</p> : null}
       <select
         id={name}
         name={name}
@@ -179,6 +178,7 @@ export function SelectField({
           </option>
         ))}
       </select>
+      {helper ? <p className="mt-2 text-xs leading-5 text-slate-500">{helper}</p> : null}
       {error ? <p className="mt-2 text-sm text-rose-700">{error}</p> : null}
     </div>
   );
