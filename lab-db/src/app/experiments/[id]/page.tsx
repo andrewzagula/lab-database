@@ -10,6 +10,9 @@ import {
   getExperimentDetail,
   listPlasmidsNotInExperiment,
 } from "@/lib/read-db";
+import { RelationshipGraph } from "@/app/_components/relationship-graph";
+import { getRecordGraph } from "@/lib/graph";
+import { layoutRadial } from "@/lib/graph-layout";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +69,9 @@ export default async function ExperimentDetailPage({
   }
 
   const availablePlasmids = listPlasmidsNotInExperiment(experiment.id);
+
+  const focusGraph = getRecordGraph("experiment", experiment.id);
+  const focusLayout = focusGraph ? layoutRadial(focusGraph) : null;
 
   return (
     <section className="space-y-6">
@@ -127,6 +133,28 @@ export default async function ExperimentDetailPage({
           />
         </dl>
       </section>
+
+      {focusLayout ? (
+        <section className="space-y-4">
+          <div>
+            <p className="font-mono text-xs font-semibold uppercase text-teal-700">
+              Relationships
+            </p>
+            <h3 className="mt-1 text-xl font-semibold text-slate-950">
+              Relationship map
+            </h3>
+            <p className="mt-1 text-sm text-slate-600">
+              This record and the experiments, plasmids, and constructs it
+              connects to. Click a node to open it.
+            </p>
+          </div>
+          <RelationshipGraph
+            nodes={focusLayout.nodes}
+            edges={focusLayout.edges}
+            mode="focus"
+          />
+        </section>
+      ) : null}
 
       <section className="space-y-4">
         <div>

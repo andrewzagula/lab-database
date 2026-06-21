@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/app/_components/empty-state";
+import { RelationshipGraph } from "@/app/_components/relationship-graph";
+import { getRecordGraph } from "@/lib/graph";
+import { layoutRadial } from "@/lib/graph-layout";
 import { getConstructDetail } from "@/lib/read-db";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +46,9 @@ export default async function ConstructDetailPage({
   if (!construct) {
     notFound();
   }
+
+  const focusGraph = getRecordGraph("construct", construct.id);
+  const focusLayout = focusGraph ? layoutRadial(focusGraph) : null;
 
   return (
     <section className="space-y-6">
@@ -124,6 +130,28 @@ export default async function ConstructDetailPage({
           </div>
         )}
       </section>
+
+      {focusLayout ? (
+        <section className="space-y-4">
+          <div>
+            <p className="font-mono text-xs font-semibold uppercase text-teal-700">
+              Relationships
+            </p>
+            <h3 className="mt-1 text-xl font-semibold text-slate-950">
+              Relationship map
+            </h3>
+            <p className="mt-1 text-sm text-slate-600">
+              This record and the experiments, plasmids, and constructs it
+              connects to. Click a node to open it.
+            </p>
+          </div>
+          <RelationshipGraph
+            nodes={focusLayout.nodes}
+            edges={focusLayout.edges}
+            mode="focus"
+          />
+        </section>
+      ) : null}
 
       <section className="space-y-4">
         <div>

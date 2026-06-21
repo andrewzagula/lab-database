@@ -7,6 +7,9 @@ import {
   storedFileExists,
 } from "@/lib/files";
 import { parseGenBank } from "@/lib/genbank";
+import { RelationshipGraph } from "@/app/_components/relationship-graph";
+import { getRecordGraph } from "@/lib/graph";
+import { layoutRadial } from "@/lib/graph-layout";
 import { getPlasmidDetail } from "@/lib/read-db";
 
 export const dynamic = "force-dynamic";
@@ -62,6 +65,9 @@ export default async function PlasmidDetailPage({
   if (!plasmid) {
     notFound();
   }
+
+  const focusGraph = getRecordGraph("plasmid", plasmid.id);
+  const focusLayout = focusGraph ? layoutRadial(focusGraph) : null;
 
   const fileViews = await Promise.all(
     plasmid.files.map(async (file) => {
@@ -136,6 +142,28 @@ export default async function PlasmidDetailPage({
           <Field label="Created on" value={displayValue(plasmid.createdOn)} mono />
         </dl>
       </section>
+
+      {focusLayout ? (
+        <section className="space-y-4">
+          <div>
+            <p className="font-mono text-xs font-semibold uppercase text-teal-700">
+              Relationships
+            </p>
+            <h3 className="mt-1 text-xl font-semibold text-slate-950">
+              Relationship map
+            </h3>
+            <p className="mt-1 text-sm text-slate-600">
+              This record and the experiments, plasmids, and constructs it
+              connects to. Click a node to open it.
+            </p>
+          </div>
+          <RelationshipGraph
+            nodes={focusLayout.nodes}
+            edges={focusLayout.edges}
+            mode="focus"
+          />
+        </section>
+      ) : null}
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-slate-200 bg-white p-6">
