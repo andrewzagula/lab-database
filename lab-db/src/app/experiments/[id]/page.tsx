@@ -23,6 +23,11 @@ function displayValue(value: string | number | null) {
   return value ?? "—";
 }
 
+export async function generateMetadata({ params }: ExperimentDetailPageProps) {
+  const { id } = await params;
+  return { title: id };
+}
+
 function Field({
   label,
   value,
@@ -281,7 +286,7 @@ export default async function ExperimentDetailPage({
           <h3 className="mt-1 text-xl font-semibold text-slate-950">
             Comments
           </h3>
-          <p className="mt-4 text-sm leading-6 text-slate-700">
+          <p className="mt-4 break-words text-sm leading-6 text-slate-700">
             {displayValue(experiment.comments)}
           </p>
           {experiment.files.some((file) => file.notes) ? (

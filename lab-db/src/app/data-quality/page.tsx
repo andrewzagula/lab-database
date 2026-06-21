@@ -4,6 +4,8 @@ import { readSeedReport } from "@/lib/seed-report";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "Data quality" };
+
 const COUNT_LABELS: Record<string, string> = {
   constructs: "Constructs",
   plasmids: "Plasmids",

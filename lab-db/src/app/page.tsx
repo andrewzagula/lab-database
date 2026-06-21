@@ -44,13 +44,16 @@ export default function Home() {
         </p>
         <div className="mt-3 max-w-3xl space-y-3">
           <h2 className="text-4xl font-semibold tracking-normal text-slate-950">
-            Seeded lab records from the local SQLite database.
+            View, edit, and trace constructs, plasmids, and experiments.
           </h2>
           <p className="text-lg leading-8 text-slate-600">
-            Phase 5 reads and edits constructs, plasmids, and experiments from
-            <span className="font-mono"> dev.db</span>. Relationship tracing
-            remains clickable, and many-to-many relationship management is
-            reserved for Phase 6.
+            Every record links to the ones it relates to, so you can follow an
+            experiment to the plasmids it uses and on to the construct each
+            plasmid carries — and back the other way.
+          </p>
+          <p className="font-mono text-sm text-slate-500">
+            Experiment → Plasmid → Construct &nbsp;·&nbsp; Construct → Plasmids →
+            Experiments
           </p>
         </div>
       </section>

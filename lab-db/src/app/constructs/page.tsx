@@ -6,6 +6,8 @@ import { listConstructs } from "@/lib/read-db";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "Constructs" };
+
 type ConstructsPageProps = {
   searchParams: PageSearchParams;
 };

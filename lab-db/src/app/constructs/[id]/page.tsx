@@ -15,6 +15,25 @@ function displayValue(value: string | number | null) {
   return value ?? "—";
 }
 
+/**
+ * Render a protein sequence as a FASTA-style block: amino acids grouped in tens,
+ * 60 per row, each row prefixed with its 1-based start position.
+ */
+function formatProteinSequence(sequence: string) {
+  const rows: string[] = [];
+  for (let i = 0; i < sequence.length; i += 60) {
+    const row = sequence.slice(i, i + 60);
+    const groups = row.match(/.{1,10}/g)?.join(" ") ?? row;
+    rows.push(`${String(i + 1).padStart(5, " ")}  ${groups}`);
+  }
+  return rows.join("\n");
+}
+
+export async function generateMetadata({ params }: ConstructDetailPageProps) {
+  const { id } = await params;
+  return { title: id };
+}
+
 export default async function ConstructDetailPage({
   params,
 }: ConstructDetailPageProps) {
@@ -93,8 +112,8 @@ export default async function ConstructDetailPage({
           </p>
         </div>
         {construct.proteinSequence ? (
-          <pre className="mt-5 max-h-[34rem] overflow-auto whitespace-pre-wrap break-all rounded-lg bg-slate-950 p-4 font-mono text-xs leading-6 text-slate-100">
-            {construct.proteinSequence}
+          <pre className="mt-5 max-h-[34rem] overflow-auto whitespace-pre rounded-lg bg-slate-950 p-4 font-mono text-xs leading-6 text-slate-100">
+            {formatProteinSequence(construct.proteinSequence)}
           </pre>
         ) : (
           <div className="mt-5">

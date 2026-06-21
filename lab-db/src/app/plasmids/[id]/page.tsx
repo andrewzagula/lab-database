@@ -21,6 +21,11 @@ function displayValue(value: string | number | null) {
   return value ?? "—";
 }
 
+export async function generateMetadata({ params }: PlasmidDetailPageProps) {
+  const { id } = await params;
+  return { title: id };
+}
+
 function Field({
   label,
   value,
@@ -170,7 +175,7 @@ export default async function PlasmidDetailPage({
           <h3 className="mt-1 text-xl font-semibold text-slate-950">
             Comments and description
           </h3>
-          <div className="mt-4 space-y-4 text-sm leading-6 text-slate-700">
+          <div className="mt-4 space-y-4 break-words text-sm leading-6 text-slate-700">
             <div>
               <p className="font-semibold text-slate-950">Comments</p>
               <p className="mt-1">{displayValue(plasmid.comments)}</p>
@@ -318,7 +323,7 @@ export default async function PlasmidDetailPage({
                         <dt className="text-xs font-semibold uppercase text-slate-500">
                           Definition
                         </dt>
-                        <dd className="mt-1 text-sm leading-6 text-slate-700">
+                        <dd className="mt-1 break-words text-sm leading-6 text-slate-700">
                           {genbank.definition}
                         </dd>
                       </div>

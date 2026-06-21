@@ -6,6 +6,8 @@ import { listPlasmids } from "@/lib/read-db";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "Plasmids" };
+
 type PlasmidsPageProps = {
   searchParams: PageSearchParams;
 };

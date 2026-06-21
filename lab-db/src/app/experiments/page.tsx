@@ -6,6 +6,8 @@ import { listExperiments } from "@/lib/read-db";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "Experiments" };
+
 type ExperimentsPageProps = {
   searchParams: PageSearchParams;
 };
