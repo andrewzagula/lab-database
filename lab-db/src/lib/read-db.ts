@@ -219,7 +219,7 @@ function resolveSqlitePath() {
   return path.resolve(process.cwd(), withoutQuery);
 }
 
-function withReadDb<T>(callback: (db: DatabaseSync) => T) {
+export function withReadDb<T>(callback: (db: DatabaseSync) => T) {
   const db = new DatabaseSync(resolveSqlitePath(), { readOnly: true });
   try {
     db.exec("PRAGMA query_only = ON");
@@ -229,11 +229,11 @@ function withReadDb<T>(callback: (db: DatabaseSync) => T) {
   }
 }
 
-function all<T>(db: DatabaseSync, sql: string, params: SqlValue[] = []) {
+export function all<T>(db: DatabaseSync, sql: string, params: SqlValue[] = []) {
   return db.prepare(sql).all(...params) as T[];
 }
 
-function get<T>(db: DatabaseSync, sql: string, params: SqlValue[] = []) {
+export function get<T>(db: DatabaseSync, sql: string, params: SqlValue[] = []) {
   return db.prepare(sql).get(...params) as T | undefined;
 }
 
