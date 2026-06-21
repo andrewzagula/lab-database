@@ -64,6 +64,8 @@ export type FormState<TValues> = {
   errors: Record<string, string>;
 };
 
+export type LinkActionState = { error: string } | null;
+
 export const emptyConstructValues: ConstructFormValues = {
   id: "",
   shortName: "",

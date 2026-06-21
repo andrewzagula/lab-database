@@ -149,6 +149,12 @@ export type ConstructOption = {
   label: string | null;
 };
 
+export type PlasmidLinkOption = {
+  id: string;
+  name: string | null;
+  constructId: string | null;
+};
+
 export type ConstructFormRecord = {
   id: string;
   shortName: string | null;
@@ -662,6 +668,35 @@ export function getExperimentDetail(id: string): ExperimentDetail | null {
       plasmids,
       files,
     };
+  });
+}
+
+export function listPlasmidsNotInExperiment(experimentId: string): PlasmidLinkOption[] {
+  return withReadDb((db) => {
+    const rows = all<PlasmidLinkOption>(
+      db,
+      `
+        SELECT
+          p."id",
+          p."name",
+          p."constructId"
+        FROM "Plasmid" p
+        WHERE NOT EXISTS (
+          SELECT 1
+          FROM "ExperimentPlasmid" ep
+          WHERE ep."plasmidId" = p."id"
+            AND ep."experimentId" = ?
+        )
+        ORDER BY p."id"
+      `,
+      [experimentId],
+    );
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      constructId: row.constructId,
+    }));
   });
 }
 

@@ -21,6 +21,7 @@ type EntityTable = "Construct" | "Plasmid" | "Experiment";
 type MutationResult<TValues> =
   | { ok: true; id: string }
   | { ok: false; state: FormState<TValues> };
+type LinkResult = { ok: true } | { ok: false; error: string };
 
 type CurrentPlasmidValues = {
   plasmidType: string | null;
@@ -727,5 +728,93 @@ export function updateExperiment(
     });
   } catch (error) {
     return formError(values, error instanceof Error ? error.message : "Could not update experiment.");
+  }
+}
+
+function linkExists(db: DatabaseSync, experimentId: string, plasmidId: string) {
+  return Boolean(
+    get<{ experimentId: string }>(
+      db,
+      `
+        SELECT "experimentId"
+        FROM "ExperimentPlasmid"
+        WHERE "experimentId" = ? AND "plasmidId" = ?
+        LIMIT 1
+      `,
+      [experimentId, plasmidId],
+    ),
+  );
+}
+
+export function linkPlasmidToExperiment(
+  experimentId: string,
+  plasmidId: string,
+): LinkResult {
+  const normalizedExperimentId = experimentId.trim().toUpperCase();
+  const normalizedPlasmidId = plasmidId.trim().toUpperCase();
+
+  if (!normalizedPlasmidId) {
+    return { ok: false, error: "Choose a plasmid to link." };
+  }
+
+  try {
+    return withWriteDb((db) => {
+      if (!recordExists(db, "Experiment", normalizedExperimentId)) {
+        return { ok: false, error: "Experiment no longer exists." };
+      }
+
+      if (!recordExists(db, "Plasmid", normalizedPlasmidId)) {
+        return { ok: false, error: "Choose an existing plasmid." };
+      }
+
+      if (linkExists(db, normalizedExperimentId, normalizedPlasmidId)) {
+        return {
+          ok: false,
+          error: "That plasmid is already linked to this experiment.",
+        };
+      }
+
+      runTransaction(db, () => {
+        run(
+          db,
+          `INSERT INTO "ExperimentPlasmid" ("experimentId", "plasmidId") VALUES (?, ?)`,
+          [normalizedExperimentId, normalizedPlasmidId],
+        );
+      });
+
+      return { ok: true };
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Could not link plasmid.",
+    };
+  }
+}
+
+export function unlinkPlasmidFromExperiment(
+  experimentId: string,
+  plasmidId: string,
+): LinkResult {
+  const normalizedExperimentId = experimentId.trim().toUpperCase();
+  const normalizedPlasmidId = plasmidId.trim().toUpperCase();
+
+  try {
+    return withWriteDb((db) => {
+      runTransaction(db, () => {
+        run(
+          db,
+          `DELETE FROM "ExperimentPlasmid" WHERE "experimentId" = ? AND "plasmidId" = ?`,
+          [normalizedExperimentId, normalizedPlasmidId],
+        );
+      });
+
+      return { ok: true };
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Could not unlink plasmid.",
+    };
   }
 }

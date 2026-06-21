@@ -6,6 +6,7 @@ import type {
   ConstructFormValues,
   ExperimentFormValues,
   FormState,
+  LinkActionState,
   PlasmidFormValues,
 } from "@/lib/form-options";
 import {
@@ -14,7 +15,9 @@ import {
   createExperiment,
   createPlasmid,
   experimentValuesFromForm,
+  linkPlasmidToExperiment,
   plasmidValuesFromForm,
+  unlinkPlasmidFromExperiment,
   updateConstruct,
   updateExperiment,
   updatePlasmid,
@@ -142,4 +145,41 @@ export async function updateExperimentAction(
 
   revalidateExperimentPaths(result.id, originalId);
   redirect(`/experiments/${result.id}`);
+}
+
+function revalidateExperimentPlasmidLink(experimentId: string, plasmidId: string) {
+  revalidatePath("/");
+  revalidatePath("/constructs");
+  revalidatePath("/plasmids");
+  revalidatePath("/experiments");
+  revalidatePath(`/experiments/${experimentId}`);
+  revalidatePath(`/plasmids/${plasmidId}`);
+}
+
+export async function linkPlasmidAction(
+  experimentId: string,
+  _state: LinkActionState,
+  formData: FormData,
+): Promise<LinkActionState> {
+  const raw = formData.get("plasmidId");
+  const plasmidId = typeof raw === "string" ? raw : "";
+  const result = linkPlasmidToExperiment(experimentId, plasmidId);
+
+  if (!result.ok) {
+    return { error: result.error };
+  }
+
+  revalidateExperimentPlasmidLink(experimentId, plasmidId);
+  return null;
+}
+
+export async function unlinkPlasmidAction(
+  experimentId: string,
+  plasmidId: string,
+) {
+  const result = unlinkPlasmidFromExperiment(experimentId, plasmidId);
+
+  if (result.ok) {
+    revalidateExperimentPlasmidLink(experimentId, plasmidId);
+  }
 }

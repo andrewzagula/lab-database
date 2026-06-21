@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/app/_components/empty-state";
-import { getExperimentDetail } from "@/lib/read-db";
+import {
+  LinkPlasmidForm,
+  UnlinkPlasmidButton,
+} from "@/app/_components/experiment-plasmid-controls";
+import {
+  getExperimentDetail,
+  listPlasmidsNotInExperiment,
+} from "@/lib/read-db";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +58,8 @@ export default async function ExperimentDetailPage({
   if (!experiment) {
     notFound();
   }
+
+  const availablePlasmids = listPlasmidsNotInExperiment(experiment.id);
 
   return (
     <section className="space-y-6">
@@ -121,11 +130,19 @@ export default async function ExperimentDetailPage({
           <h3 className="mt-1 text-xl font-semibold text-slate-950">
             Linked plasmids
           </h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Manage which plasmids this experiment uses. Each plasmid also traces
+            to the construct it carries.
+          </p>
         </div>
+        <LinkPlasmidForm
+          experimentId={experiment.id}
+          options={availablePlasmids}
+        />
         {experiment.plasmids.length ? (
           <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[920px] text-left text-sm">
+              <table className="w-full min-w-[1040px] text-left text-sm">
                 <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
                   <tr>
                     <th className="px-4 py-3 font-semibold">Plasmid</th>
@@ -133,6 +150,7 @@ export default async function ExperimentDetailPage({
                     <th className="px-4 py-3 font-semibold">Type</th>
                     <th className="px-4 py-3 font-semibold">Source</th>
                     <th className="px-4 py-3 font-semibold">Construct</th>
+                    <th className="px-4 py-3 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -174,6 +192,12 @@ export default async function ExperimentDetailPage({
                           "—"
                         )}
                       </td>
+                      <td className="px-4 py-3">
+                        <UnlinkPlasmidButton
+                          experimentId={experiment.id}
+                          plasmidId={plasmid.id}
+                        />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -182,7 +206,7 @@ export default async function ExperimentDetailPage({
           </div>
         ) : (
           <EmptyState title="No linked plasmids">
-            This experiment does not have any plasmid usage recorded.
+            Use the selector above to add a plasmid to this experiment.
           </EmptyState>
         )}
       </section>
