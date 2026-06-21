@@ -144,6 +144,12 @@ export type ExperimentDetail = {
   files: ExperimentDetailFileRow[];
 };
 
+export type StoredFileRow = {
+  fileName: string;
+  filePath: string;
+  fileType: string | null;
+};
+
 export type ConstructOption = {
   id: string;
   label: string | null;
@@ -668,6 +674,34 @@ export function getExperimentDetail(id: string): ExperimentDetail | null {
       plasmids,
       files,
     };
+  });
+}
+
+export function getPlasmidFile(id: number): StoredFileRow | null {
+  return withReadDb((db) => {
+    const row = get<StoredFileRow>(
+      db,
+      `SELECT "fileName", "filePath", "fileType" FROM "PlasmidFile" WHERE "id" = ?`,
+      [id],
+    );
+
+    return row
+      ? { fileName: row.fileName, filePath: row.filePath, fileType: row.fileType }
+      : null;
+  });
+}
+
+export function getExperimentFile(id: number): StoredFileRow | null {
+  return withReadDb((db) => {
+    const row = get<StoredFileRow>(
+      db,
+      `SELECT "fileName", "filePath", "fileType" FROM "ExperimentFile" WHERE "id" = ?`,
+      [id],
+    );
+
+    return row
+      ? { fileName: row.fileName, filePath: row.filePath, fileType: row.fileType }
+      : null;
   });
 }
 

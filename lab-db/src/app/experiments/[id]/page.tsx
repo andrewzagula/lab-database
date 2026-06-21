@@ -5,6 +5,7 @@ import {
   LinkPlasmidForm,
   UnlinkPlasmidButton,
 } from "@/app/_components/experiment-plasmid-controls";
+import { storedFileExists } from "@/lib/files";
 import {
   getExperimentDetail,
   listPlasmidsNotInExperiment,
@@ -234,15 +235,26 @@ export default async function ExperimentDetailPage({
                     {experiment.files.map((file) => (
                       <tr key={file.id} className="hover:bg-slate-50">
                         <td className="px-4 py-3 font-mono text-slate-700">
-                          {file.fileName}
+                          {storedFileExists(file.filePath) ? (
+                            <a
+                              href={`/files/experiment/${file.id}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-teal-800 hover:underline"
+                            >
+                              {file.fileName}
+                            </a>
+                          ) : (
+                            <span>
+                              {file.fileName}{" "}
+                              <span className="text-xs font-semibold text-rose-600">
+                                (missing)
+                              </span>
+                            </span>
+                          )}
                         </td>
-                        <td className="px-4 py-3">
-                          <a
-                            href={file.filePath}
-                            className="font-mono text-xs text-teal-800 hover:underline"
-                          >
-                            {file.filePath}
-                          </a>
+                        <td className="px-4 py-3 font-mono text-xs text-slate-500">
+                          {file.filePath}
                         </td>
                         <td className="px-4 py-3 text-slate-700">
                           {displayValue(file.fileType)}

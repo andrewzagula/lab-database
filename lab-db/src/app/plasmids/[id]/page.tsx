@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/app/_components/empty-state";
+import {
+  isGenBankFile,
+  readStoredFileText,
+  storedFileExists,
+} from "@/lib/files";
+import { parseGenBank } from "@/lib/genbank";
 import { getPlasmidDetail } from "@/lib/read-db";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +57,18 @@ export default async function PlasmidDetailPage({
   if (!plasmid) {
     notFound();
   }
+
+  const fileViews = await Promise.all(
+    plasmid.files.map(async (file) => {
+      const exists = storedFileExists(file.filePath);
+      let genbank = null;
+      if (exists && isGenBankFile(file.fileName, file.fileType)) {
+        const text = await readStoredFileText(file.filePath);
+        genbank = text ? parseGenBank(text) : null;
+      }
+      return { file, exists, genbank };
+    }),
+  );
 
   return (
     <section className="space-y-6">
@@ -233,43 +251,110 @@ export default async function PlasmidDetailPage({
             GenBank files
           </h3>
         </div>
-        {plasmid.files.length ? (
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[860px] text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">File</th>
-                    <th className="px-4 py-3 font-semibold">Stored path</th>
-                    <th className="px-4 py-3 font-semibold">Type</th>
-                    <th className="px-4 py-3 font-semibold">Notes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {plasmid.files.map((file) => (
-                    <tr key={file.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-mono text-slate-700">
-                        {file.fileName}
-                      </td>
-                      <td className="px-4 py-3">
+        {fileViews.length ? (
+          <div className="space-y-4">
+            {fileViews.map(({ file, exists, genbank }) => (
+              <div
+                key={file.id}
+                className="rounded-lg border border-slate-200 bg-white p-5"
+              >
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {exists ? (
                         <a
-                          href={file.filePath}
-                          className="font-mono text-xs text-teal-800 hover:underline"
+                          href={`/files/plasmid/${file.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-mono text-sm font-semibold text-teal-800 hover:underline"
                         >
-                          {file.filePath}
+                          {file.fileName}
                         </a>
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {displayValue(file.fileType)}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {displayValue(file.notes)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      ) : (
+                        <span className="font-mono text-sm font-semibold text-slate-700">
+                          {file.fileName}
+                        </span>
+                      )}
+                      {file.fileType ? (
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold uppercase text-slate-600">
+                          {file.fileType}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-1 font-mono text-xs text-slate-500">
+                      {file.filePath}
+                    </p>
+                  </div>
+                  {exists ? (
+                    <a
+                      href={`/files/plasmid/${file.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex shrink-0 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-teal-700 hover:text-teal-800"
+                    >
+                      Open / download
+                    </a>
+                  ) : (
+                    <span className="inline-flex shrink-0 rounded-md border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">
+                      File not found
+                    </span>
+                  )}
+                </div>
+
+                {genbank ? (
+                  <div className="mt-4 border-t border-slate-200 pt-4">
+                    <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+                      <Field label="Locus" value={displayValue(genbank.locus)} mono />
+                      <Field
+                        label="Length"
+                        value={genbank.lengthBp != null ? `${genbank.lengthBp} bp` : "—"}
+                        mono
+                      />
+                      <Field label="Topology" value={displayValue(genbank.topology)} />
+                      <Field label="Molecule" value={displayValue(genbank.moleculeType)} />
+                    </dl>
+                    {genbank.definition ? (
+                      <div className="mt-4">
+                        <dt className="text-xs font-semibold uppercase text-slate-500">
+                          Definition
+                        </dt>
+                        <dd className="mt-1 text-sm leading-6 text-slate-700">
+                          {genbank.definition}
+                        </dd>
+                      </div>
+                    ) : null}
+                    {genbank.featureLabels.length ? (
+                      <div className="mt-4">
+                        <dt className="text-xs font-semibold uppercase text-slate-500">
+                          Feature labels ({genbank.featureLabels.length})
+                        </dt>
+                        <dd className="mt-2 flex flex-wrap gap-1.5">
+                          {genbank.featureLabels.map((label) => (
+                            <span
+                              key={label}
+                              className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-xs text-slate-700"
+                            >
+                              {label}
+                            </span>
+                          ))}
+                        </dd>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : !exists && isGenBankFile(file.fileName, file.fileType) ? (
+                  <p className="mt-3 text-sm text-slate-500">
+                    GenBank metadata is unavailable because the file is missing at
+                    its stored path.
+                  </p>
+                ) : null}
+
+                {file.notes ? (
+                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                    {file.notes}
+                  </p>
+                ) : null}
+              </div>
+            ))}
           </div>
         ) : (
           <EmptyState title="No GenBank files">
