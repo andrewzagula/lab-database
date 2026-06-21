@@ -24,6 +24,8 @@ Complete:
 - Route-level not-found states for missing detail records
 - Link and unlink plasmids to experiments through the `ExperimentPlasmid` join table from the experiment detail page, with duplicate-safe linking and construct context kept visible
 - File download/open route plus a lightweight GenBank metadata preview (locus, definition, length, topology, feature labels) on plasmid detail, and download links on experiment files, with clear missing-file states
+- `node:test` + `tsx` test runner (`npm test`) with focused tests for seed/import, relationship queries, validation, and GenBank parsing, each against an isolated temporary database
+- Seed-time data-quality report and a `/data-quality` page that documents imported records, skipped placeholder rows, identifier normalizations, and attached files
 - Root mock files preserved outside this app folder
 
 Not started yet:
@@ -53,7 +55,8 @@ npx prisma migrate status
 npm run db:seed
 npx prisma db seed
 npm run lint
-npx tsc --noEmit
+npm run typecheck
+npm test
 npx prisma validate
 ```
 
@@ -154,12 +157,25 @@ Plasmid detail now parses linked GenBank files with `src/lib/genbank.ts` and ren
 
 Phase 7 data-access/security note: served files are restricted to the repository root (`path.resolve(process.cwd(), "..")`) and are only reachable by their database row id, so a stored path cannot be used to read arbitrary files. Reads stay outside `PrismaClient`, consistent with earlier phases.
 
+Phase 8 verification passed with:
+
+```bash
+npm test
+npm run typecheck
+npm run lint
+npx prisma validate
+```
+
+`npm test` runs `node --import tsx --test` over `test/*.test.ts` and passes 22 checks across four files: `genbank.test.ts` (parser fields, multi-line definitions, de-duplicated labels, and the bundled `Example_PL000001.gb`), `seed.test.ts` (runs the real seed against a temp database, asserting the three imported records, normalizations, file links, idempotency, and the written report), `relationships.test.ts` (construct → plasmids, plasmid → construct/experiments, experiment → plasmids/constructs), and `validation.test.ts` (duplicate and malformed ids, invalid dates, bad construct references, duplicate links). Each test file builds its own temporary SQLite database from the migration SQL and points `DATABASE_URL` at it, so the developer's `dev.db` is never touched. The seed now writes `seed-report.json` (git-ignored, next to the database), surfaced at `/data-quality` with imported records, skipped placeholder counts, the `from import` → `CON000001` and `EXP_00001` → `EXP000001` normalizations, and attached files.
+
+Phase 8 testing note: tests use Node's built-in test runner with `tsx` for TypeScript and `@/` path-alias resolution, keeping the dependency footprint small and consistent with the project's use of platform built-ins. `node:sqlite` runs unflagged on Node 22.16 (with an experimental warning), so no extra flag is required.
+
 ## Next Handoff
 
-Complete Phase 8 only:
+Complete Phase 9 only:
 
-1. Add a test runner and focused tests for seed/import, relationship queries, and validation behavior.
-2. Surface the seed-time data-quality normalizations in a small view or log.
-3. Keep upload flows and record deletion out of Phase 8 unless explicitly requested.
+1. Polish layout, empty/loading/error states, navigation, and table/form readability for a take-home submission.
+2. Keep the interface operational and scientific; do not add marketing-style sections.
+3. Keep upload flows and record deletion out of Phase 9 unless explicitly requested.
 
 Note: Prisma 7 uses `prisma.config.ts` to load `DATABASE_URL` from `.env` and to configure `npx prisma db seed`; keep that generated config pattern.

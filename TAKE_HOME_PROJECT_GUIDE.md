@@ -4,7 +4,7 @@ For a phase-by-phase coding-agent runbook, use `CODING_AGENT_PHASES.md`. That fi
 
 ## What This Project Is
 
-This repository is a mock specification for a small lab database application. Phases 0, 1, 2, 3, 4, 5, 6, and 7 have created a runnable Next.js scaffold, Prisma SQLite schema, verified seed/import workflow, read-only relationship-tracing pages, create/edit forms, experiment-plasmid relationship management, and file links with a GenBank metadata preview for constructs, plasmids, and experiments in `lab-db/`; the provided Excel, Word, and GenBank files remain at the repository root and define the domain, sample data, and expected relationships.
+This repository is a mock specification for a small lab database application. Phases 0, 1, 2, 3, 4, 5, 6, 7, and 8 have created a runnable Next.js scaffold, Prisma SQLite schema, verified seed/import workflow, read-only relationship-tracing pages, create/edit forms, experiment-plasmid relationship management, file links with a GenBank metadata preview, a test suite, and a data-quality view for constructs, plasmids, and experiments in `lab-db/`; the provided Excel, Word, and GenBank files remain at the repository root and define the domain, sample data, and expected relationships.
 
 Your goal is to build a runnable web application that lets users view, edit, create, and trace relationships between:
 
@@ -63,7 +63,7 @@ Pick the stack you can finish confidently. A complete, polished small app is bet
 
 ## Current Repository Layout
 
-Phases 0, 1, 2, 3, 4, 5, 6, and 7 are complete and should not be repeated.
+Phases 0, 1, 2, 3, 4, 5, 6, 7, and 8 are complete and should not be repeated.
 
 ```text
 .
@@ -174,7 +174,18 @@ npx prisma validate
 npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-Phase 7 added file links and a lightweight GenBank metadata preview. `src/lib/genbank.ts` parses the locus, definition, length, topology, and feature labels; `src/lib/files.ts` resolves stored paths (restricted to the repository root) and serves them through the `GET /files/[kind]/[id]` route handler by database row id. Verification confirmed `PL000001` shows `Example_PL000001.gb` with `pSpCas9(BB)-2A-G`, `9288 bp`, `circular`, and labels including `Cas9`, `EGFP`, `AmpR`, `U6 promoter`, and `gRNA scaffold`; `EXP000001` shows `EXP1_mock.docx`; the route serves the GenBank text and Word document with correct content types and returns `404` for unknown ids, bad kinds, and a file missing from disk, where the detail pages show a clear missing-file state. The next coding-agent handoff should complete Phase 8 only: a test runner with focused tests plus a data-quality view/log. Keep uploads and record deletion for later phases.
+Phase 7 added file links and a lightweight GenBank metadata preview. `src/lib/genbank.ts` parses the locus, definition, length, topology, and feature labels; `src/lib/files.ts` resolves stored paths (restricted to the repository root) and serves them through the `GET /files/[kind]/[id]` route handler by database row id. Verification confirmed `PL000001` shows `Example_PL000001.gb` with `pSpCas9(BB)-2A-G`, `9288 bp`, `circular`, and labels including `Cas9`, `EGFP`, `AmpR`, `U6 promoter`, and `gRNA scaffold`; `EXP000001` shows `EXP1_mock.docx`; the route serves the GenBank text and Word document with correct content types and returns `404` for unknown ids, bad kinds, and a file missing from disk, where the detail pages show a clear missing-file state.
+
+Verified Phase 8 commands from `lab-db/`:
+
+```bash
+npm test
+npm run typecheck
+npm run lint
+npx prisma validate
+```
+
+Phase 8 added a `node:test` + `tsx` runner and a data-quality view. `npm test` passes 22 checks across `test/genbank.test.ts`, `test/seed.test.ts` (runs the real seed against a temp database), `test/relationships.test.ts`, and `test/validation.test.ts`; every test file builds its own temporary SQLite database from the migration SQL and points `DATABASE_URL` at it, so `dev.db` is never corrupted. The seed now writes a git-ignored `seed-report.json` next to the database, and `/data-quality` displays the imported records, skipped placeholder counts, the `from import` -> `CON000001` and `EXP_00001` -> `EXP000001` normalizations, and the attached files. The next coding-agent handoff should complete Phase 9 only: product polish for submission. Keep uploads and record deletion for later phases.
 
 ## Source Files And Their Meaning
 

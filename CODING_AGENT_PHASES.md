@@ -17,9 +17,9 @@ If you choose a different stack, keep the same phases and acceptance checks.
 
 ## Current Status
 
-Phases 0, 1, 2, 3, 4, 5, 6, and 7 are complete. The runnable app scaffold, Prisma SQLite schema, seed/import workflow, relationship-tracing detail pages, create/edit forms, experiment-plasmid relationship management, and file links with a GenBank metadata preview live in `lab-db/`; the original mock files remain at the repository root.
+Phases 0, 1, 2, 3, 4, 5, 6, 7, and 8 are complete. The runnable app scaffold, Prisma SQLite schema, seed/import workflow, relationship-tracing detail pages, create/edit forms, experiment-plasmid relationship management, file links with a GenBank metadata preview, a test suite, and a data-quality view live in `lab-db/`; the original mock files remain at the repository root.
 
-Verified Phase 0, Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, Phase 6, and Phase 7 state:
+Verified Phase 0 through Phase 8 state:
 
 - Next.js App Router + TypeScript scaffold exists in `lab-db/`.
 - Prisma is initialized for SQLite with `lab-db/prisma/schema.prisma` and `lab-db/prisma.config.ts`.
@@ -50,9 +50,11 @@ Verified Phase 0, Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, Phase 6, and Phas
 - Phase 6 verification linked `EXP000001` to a second plasmid through the real Server Action, confirmed the many-to-many path so `PL000001` appears in multiple experiments, confirmed the selector hides already-linked plasmids, and unlinked back to the seeded `EXP000001 -> PL000001` state.
 - Phase 7 plasmid detail parses linked GenBank files (`src/lib/genbank.ts`) and shows locus, definition, length, topology, and de-duplicated feature labels; files download/open through the `GET /files/[kind]/[id]` route handler backed by `src/lib/files.ts`, which is restricted to the repository root and reachable only by database row id.
 - Phase 7 verification confirmed `PL000001` shows `Example_PL000001.gb` with `pSpCas9(BB)-2A-G`, `9288 bp`, `circular`, and labels `Cas9`, `EGFP`, `AmpR`, `U6 promoter`, `gRNA scaffold`; `EXP000001` shows `EXP1_mock.docx`; the route serves both files with correct content types and returns `404` for unknown ids, bad kinds, and a file removed from disk, where the page shows a clear missing-file state.
+- Phase 8 adds a `node:test` + `tsx` runner (`npm test`, `npm run typecheck`) with 22 passing checks across `test/genbank.test.ts`, `test/seed.test.ts`, `test/relationships.test.ts`, and `test/validation.test.ts`; each file builds an isolated temp SQLite database from the migration SQL so `dev.db` is never touched.
+- Phase 8 also persists a seed-time data-quality report (`seed-report.json`, git-ignored) and surfaces it at `/data-quality`: imported records, skipped placeholder counts, the `from import` -> `CON000001` and `EXP_00001` -> `EXP000001` normalizations, and attached files.
 - File upload, delete, and editing remain out of scope; file display is read/download only.
 
-Next coding-agent task: start with Phase 8 only. Add a test runner with focused tests and surface seed-time data-quality normalizations. Do not build upload flows or record deletion yet.
+Next coding-agent task: start with Phase 9 only. Polish layout, empty/loading/error states, navigation, and readability for submission. Do not build upload flows or record deletion yet.
 
 ## Phase 0: Repository And Stack Setup
 
