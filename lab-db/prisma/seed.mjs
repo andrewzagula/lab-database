@@ -405,6 +405,43 @@ const counts = {
 
 db.close();
 
+const seedReport = {
+  generatedAt: new Date().toISOString(),
+  databaseFile: path.relative(appDir, dbPath),
+  imported: {
+    constructId: construct.id,
+    plasmidId: plasmid.id,
+    experimentId: experiment.id,
+  },
+  skippedPlaceholderRows: {
+    constructs: countPlaceholderRows(constructRows, "CONSTRUCT_ID"),
+    plasmids: countPlaceholderRows(plasmidRows, "PLASMID_ID"),
+    experiments: countPlaceholderRows(experimentRows, "Experiment_ID"),
+  },
+  normalizations: [
+    {
+      field: "PL000001.CONSTRUCT_ID",
+      from: clean(plasmidRow.CONSTRUCT_ID),
+      to: normalizedConstructId,
+      note: "Linked the plasmid to its construct.",
+    },
+    {
+      field: "PL000001.EXPERIMENT_ID",
+      from: clean(plasmidRow.EXPERIMENT_ID),
+      to: normalizedExperimentId,
+      note: "Linked the plasmid usage to its experiment.",
+    },
+  ],
+  fileLinks: [
+    { record: plasmid.id, file: FILE_LINKS.plasmid },
+    { record: experiment.id, file: FILE_LINKS.experimentFile },
+  ],
+  counts,
+};
+
+const reportPath = path.join(path.dirname(dbPath), "seed-report.json");
+fs.writeFileSync(reportPath, `${JSON.stringify(seedReport, null, 2)}\n`);
+
 console.log("Phase 2 seed import complete.");
 console.log(
   `Imported ${construct.id}, ${plasmid.id}, and ${experiment.id}; skipped placeholder rows: ` +
@@ -417,3 +454,4 @@ console.log(`Normalized PL000001 EXPERIMENT_ID "EXP_00001" -> ${normalizedExperi
 console.log(`Linked ${plasmid.id} to ${FILE_LINKS.plasmid}.`);
 console.log(`Linked ${experiment.id} to ${FILE_LINKS.experimentFile}.`);
 console.log(`Current counts: ${JSON.stringify(counts)}.`);
+console.log(`Wrote data-quality report to ${path.relative(appDir, reportPath)}.`);

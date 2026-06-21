@@ -49,6 +49,7 @@ export default function RootLayout({
                   ["Constructs", "/constructs"],
                   ["Plasmids", "/plasmids"],
                   ["Experiments", "/experiments"],
+                  ["Data quality", "/data-quality"],
                 ].map(([label, href]) => (
                   <Link
                     key={href}

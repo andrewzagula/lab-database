@@ -42,6 +42,9 @@ next-env.d.ts
 
 /src/generated/prisma
 
+# generated seed/data-quality report
+/seed-report.json
+
 # local SQLite database files
 /*.db
 /*.db-journal
