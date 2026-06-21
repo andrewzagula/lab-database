@@ -73,6 +73,7 @@ From this `lab-db/` folder:
 
 ```bash
 npm install
+cp .env.example .env        # sets DATABASE_URL to a local SQLite file
 npx prisma migrate dev      # applies the migration and creates dev.db
 npm run db:seed             # imports the mock data
 npm run dev -- --hostname 127.0.0.1 --port 3000
