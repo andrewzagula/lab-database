@@ -1,18 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { RelationshipGraph } from "@/app/_components/relationship-graph";
-import type { GraphEdge, GraphNodeKind } from "@/lib/graph";
+import type { GraphEdge } from "@/lib/graph";
 import type { PositionedNode } from "@/lib/graph-layout";
 
 type Props = { nodes: PositionedNode[]; edges: GraphEdge[] };
 
-type Selection = { recordId: string; kind: GraphNodeKind } | null;
-
 export function ExploreClient({ nodes, edges }: Props) {
   const [query, setQuery] = useState("");
-  const [selection, setSelection] = useState<Selection>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   const highlightIds = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -27,61 +25,83 @@ export function ExploreClient({ nodes, edges }: Props) {
       .map((n) => n.id);
   }, [query, nodes]);
 
-  const selectedNode = selection
-    ? nodes.find((n) => n.recordId === selection.recordId && n.kind === selection.kind) ?? null
-    : null;
+  // While the enlarged modal is open, lock body scroll and close on Escape.
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [expanded]);
+
+  const searchInput = (
+    <input
+      type="search"
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      placeholder="Search by id, name, or type…"
+      className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15"
+    />
+  );
+
+  const buttonClass =
+    "inline-flex shrink-0 items-center gap-1.5 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-700 hover:text-teal-800";
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
+    <>
       <div className="space-y-3">
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by id, name, or type…"
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15"
-        />
+        <div className="flex gap-2">
+          {searchInput}
+          <button type="button" onClick={() => setExpanded(true)} className={buttonClass}>
+            <span aria-hidden>⤢</span> Enlarge
+          </button>
+        </div>
         <RelationshipGraph
           nodes={nodes}
           edges={edges}
           mode="explore"
-          onSelect={(recordId, kind) => setSelection({ recordId, kind })}
-          selectedNodeId={selectedNode?.id ?? null}
+          selectedNodeId={selectedId}
           highlightIds={highlightIds}
+          onSelect={setSelectedId}
+          onClearSelection={() => setSelectedId(null)}
         />
       </div>
 
-      <aside className="rounded-lg border border-slate-200 bg-white p-5">
-        <p className="font-mono text-xs font-semibold uppercase text-teal-700">
-          Selection
-        </p>
-        {selectedNode ? (
-          <div className="mt-3 space-y-3">
-            <div>
-              <p className="font-mono text-sm font-semibold text-slate-950">
-                {selectedNode.recordId}
-              </p>
-              <p className="text-sm text-slate-700">{selectedNode.label}</p>
-              {selectedNode.sublabel ? (
-                <p className="text-xs text-slate-500">{selectedNode.sublabel}</p>
-              ) : null}
-              <span className="mt-2 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold uppercase text-slate-600">
-                {selectedNode.kind}
-              </span>
+      {expanded ? (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-slate-950/70 p-4 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Relationship map (enlarged)"
+        >
+          <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-lg bg-white p-3 shadow-2xl">
+            <div className="flex items-center gap-2">
+              {searchInput}
+              <button type="button" onClick={() => setExpanded(false)} className={buttonClass}>
+                Close <span aria-hidden>✕</span>
+              </button>
             </div>
-            <Link
-              href={`/${selectedNode.kind}s/${selectedNode.recordId}`}
-              className="inline-flex rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
-            >
-              View detail & focus map
-            </Link>
+            <div className="min-h-0 flex-1">
+              <RelationshipGraph
+                nodes={nodes}
+                edges={edges}
+                mode="explore"
+                selectedNodeId={selectedId}
+                highlightIds={highlightIds}
+                onSelect={setSelectedId}
+                onClearSelection={() => setSelectedId(null)}
+                heightClass="h-full"
+              />
+            </div>
           </div>
-        ) : (
-          <p className="mt-3 text-sm text-slate-600">
-            Click a node to see its details and a link to its page.
-          </p>
-        )}
-      </aside>
-    </div>
+        </div>
+      ) : null}
+    </>
   );
 }

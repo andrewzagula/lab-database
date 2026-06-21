@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Background,
   Controls,
-  MiniMap,
+  NodeToolbar,
   Panel,
+  Position,
   ReactFlow,
   type Edge,
   type Node,
@@ -32,9 +34,11 @@ type Props = {
   nodes: PositionedNode[];
   edges: GraphEdge[];
   mode: "focus" | "explore";
-  onSelect?: (recordId: string, kind: GraphNodeKind) => void;
   selectedNodeId?: string | null;
   highlightIds?: string[] | null;
+  onSelect?: (nodeId: string) => void;
+  onClearSelection?: () => void;
+  heightClass?: string;
 };
 
 function nodeLabel(node: PositionedNode) {
@@ -50,18 +54,36 @@ export function RelationshipGraph({
   nodes,
   edges,
   mode,
-  onSelect,
   selectedNodeId,
   highlightIds,
+  onSelect,
+  onClearSelection,
+  heightClass,
 }: Props) {
   const router = useRouter();
   const highlight = highlightIds ? new Set(highlightIds) : null;
+
+  // When a node is selected, the set of it + everything one edge away.
+  const neighborIds = useMemo(() => {
+    if (!selectedNodeId) return null;
+    const set = new Set<string>([selectedNodeId]);
+    for (const e of edges) {
+      if (e.source === selectedNodeId) set.add(e.target);
+      if (e.target === selectedNodeId) set.add(e.source);
+    }
+    return set;
+  }, [selectedNodeId, edges]);
 
   const rfNodes: Node[] = useMemo(
     () =>
       nodes.map((n) => {
         const c = KIND_COLORS[n.kind];
-        const dimmed = highlight ? !highlight.has(n.id) : false;
+        // A selection focuses its neighborhood; otherwise search drives dimming.
+        const dimmed = neighborIds
+          ? !neighborIds.has(n.id)
+          : highlight
+            ? !highlight.has(n.id)
+            : false;
         const emphasized = n.isCenter || n.id === selectedNodeId;
         return {
           id: n.id,
@@ -79,40 +101,56 @@ export function RelationshipGraph({
         };
       }),
     // highlight/selected change must re-derive styles
-    [nodes, selectedNodeId, highlightIds], // eslint-disable-line react-hooks/exhaustive-deps
+    [nodes, selectedNodeId, highlightIds, neighborIds], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const rfEdges: Edge[] = useMemo(
     () =>
-      edges.map((e) => ({
-        id: e.id,
-        source: e.source,
-        target: e.target,
-        label: e.relation,
-        style: {
-          stroke: "#94a3b8",
-          strokeDasharray: e.relation === "used-in" ? "4 4" : undefined,
-        },
-        labelStyle: { fontSize: 10, fill: "#64748b" },
-      })),
-    [edges],
+      edges.map((e) => {
+        const incident =
+          selectedNodeId != null && (e.source === selectedNodeId || e.target === selectedNodeId);
+        const faded = selectedNodeId != null && !incident;
+        return {
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          label: e.relation,
+          zIndex: incident ? 1 : 0,
+          style: {
+            stroke: incident ? "#0f766e" : "#94a3b8",
+            strokeWidth: incident ? 2.5 : 1,
+            strokeDasharray: e.relation === "used-in" ? "4 4" : undefined,
+            opacity: faded ? 0.1 : 1,
+          },
+          labelStyle: {
+            fontSize: 10,
+            fill: incident ? "#0f766e" : "#64748b",
+            fontWeight: incident ? 600 : 400,
+            opacity: faded ? 0.15 : 1,
+          },
+        };
+      }),
+    [edges, selectedNodeId],
   );
 
   const onNodeClick: NodeMouseHandler = useCallback(
     (_event, node) => {
-      const recordId = node.data?.recordId as string;
-      const kind = node.data?.kind as GraphNodeKind;
       if (mode === "explore") {
-        onSelect?.(recordId, kind);
+        onSelect?.(node.id);
         return;
       }
       const positioned = nodes.find((n) => n.id === node.id);
       if (positioned && !positioned.isCenter) {
-        router.push(`/${kind}s/${recordId}`);
+        router.push(`/${positioned.kind}s/${positioned.recordId}`);
       }
     },
     [mode, onSelect, nodes, router],
   );
+
+  const selected =
+    mode === "explore" && selectedNodeId
+      ? nodes.find((n) => n.id === selectedNodeId) ?? null
+      : null;
 
   if (mode === "focus" && nodes.length <= 1) {
     return (
@@ -122,12 +160,16 @@ export function RelationshipGraph({
     );
   }
 
+  const resolvedHeight =
+    heightClass ?? (mode === "explore" ? "h-[calc(100vh-15rem)] min-h-[36rem]" : "h-[28rem]");
+
   return (
-    <div className="h-[28rem] w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <div className={`${resolvedHeight} w-full overflow-hidden rounded-lg border border-slate-200 bg-white`}>
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}
         onNodeClick={onNodeClick}
+        onPaneClick={() => onClearSelection?.()}
         nodesDraggable={false}
         nodesConnectable={false}
         edgesFocusable={false}
@@ -136,7 +178,30 @@ export function RelationshipGraph({
       >
         <Background gap={20} color="#f1f5f9" />
         <Controls showInteractive={false} />
-        {mode === "explore" ? <MiniMap pannable zoomable /> : null}
+        {selected ? (
+          <NodeToolbar nodeId={selected.id} isVisible position={Position.Right} offset={14}>
+            <div className="w-56 rounded-lg border border-slate-200 bg-white p-4 shadow-xl">
+              <p className="font-mono text-sm font-semibold text-slate-950">
+                {selected.recordId}
+              </p>
+              <p className="mt-0.5 text-sm text-slate-700">{selected.label}</p>
+              {selected.sublabel ? (
+                <p className="text-xs text-slate-500">{selected.sublabel}</p>
+              ) : null}
+              <span className="mt-2 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold uppercase text-slate-600">
+                {selected.kind}
+              </span>
+              <div className="mt-3">
+                <Link
+                  href={`/${selected.kind}s/${selected.recordId}`}
+                  className="inline-flex rounded-md bg-teal-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-teal-800"
+                >
+                  View detail →
+                </Link>
+              </div>
+            </div>
+          </NodeToolbar>
+        ) : null}
         <Panel position="top-left">
           <div className="flex gap-3 rounded-md border border-slate-200 bg-white/90 px-3 py-1.5 text-xs">
             {(Object.keys(KIND_COLORS) as GraphNodeKind[]).map((kind) => (
