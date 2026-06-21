@@ -22,6 +22,9 @@ editable, relationship-aware interface.
   (locus, length, topology, feature labels) for plasmid sequence files.
 - Review a **data-quality summary** of what the seed imported and which messy
   values it normalized.
+- Explore the entire dataset as an interactive relationship graph (pan, zoom,
+  search, select) at **`/explore`**, and see a focused relationship map on every
+  construct, plasmid, and experiment detail page.
 
 ## Tech stack
 
@@ -31,6 +34,9 @@ editable, relationship-aware interface.
 - **Prisma 7** for the schema and migrations
 - **`node:sqlite`** (Node 22's built-in driver) for runtime reads/writes
 - **`xlsx`** for importing the mock spreadsheets
+- **React Flow** (`@xyflow/react`) for the relationship graph — the one new
+  runtime dependency; node positions come from our own deterministic layout, so
+  no layout dependency is needed
 - **`node:test` + `tsx`** for the test suite
 
 ### Why `node:sqlite` instead of the Prisma client
@@ -74,6 +80,11 @@ npm run dev -- --hostname 127.0.0.1 --port 3000
 
 Then open <http://127.0.0.1:3000>.
 
+> **Optional demo data:** run `npm run db:seed:demo` to load ~120 clearly-labeled
+> synthetic records (ids `CON9*/PL9*/EXP9*`) so the `/explore` map has density.
+> Remove them anytime with `npm run db:seed:demo -- --reset`. The real import is
+> left untouched.
+
 > **Note:** the app uses `node:sqlite`, which prints a one-line experimental
 > warning on Node 22 — this is expected. If `npx prisma migrate dev` reports a
 > generic schema-engine error in a sandboxed environment, re-run it with
@@ -107,13 +118,16 @@ lab-db/
 ├── prisma/
 │   ├── schema.prisma        # domain schema
 │   ├── migrations/          # initial SQLite migration
-│   └── seed.mjs             # idempotent mock-data import + data-quality report
+│   ├── seed.mjs             # idempotent mock-data import + data-quality report
+│   └── seed-demo.mjs        # optional labeled synthetic data for the Explore map
 ├── src/
-│   ├── app/                 # routes (lists, details, forms, /data-quality, /files)
-│   │   ├── _components/      # shared form/nav/empty-state components
+│   ├── app/                 # routes (lists, details, forms, /explore, /data-quality, /files)
+│   │   ├── _components/      # shared form/nav/empty-state/graph components
 │   │   └── actions.ts        # Server Actions for create/edit/link
 │   └── lib/
 │       ├── read-db.ts        # node:sqlite reads
+│       ├── graph.ts          # graph model (full graph + per-record neighborhoods)
+│       ├── graph-layout.ts   # deterministic layered + radial layouts
 │       ├── write-db.ts       # node:sqlite writes + validation
 │       ├── files.ts          # safe file resolution/serving
 │       ├── genbank.ts        # GenBank metadata parser

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EmptyState } from "@/app/_components/empty-state";
 import { readSeedReport } from "@/lib/seed-report";
+import { countDemoRecords } from "@/lib/graph";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ const COUNT_LABELS: Record<string, string> = {
 
 export default function DataQualityPage() {
   const report = readSeedReport();
+  const demoRecordCount = countDemoRecords();
 
   return (
     <section className="space-y-6">
@@ -33,6 +35,16 @@ export default function DataQualityPage() {
           the normalizations it applied so the data model can be trusted.
         </p>
       </div>
+
+      {demoRecordCount > 0 ? (
+        <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900">
+          <span className="font-semibold">Demo data present:</span>{" "}
+          {demoRecordCount} synthetic records (ids{" "}
+          <span className="font-mono">CON9*/PL9*/EXP9*</span>) are loaded for the
+          Explore map. They are not part of the real import. Remove them with{" "}
+          <span className="font-mono">npm run db:seed:demo -- --reset</span>.
+        </div>
+      ) : null}
 
       {report ? (
         <>

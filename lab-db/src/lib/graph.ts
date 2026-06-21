@@ -176,3 +176,14 @@ export function getRecordGraph(kind: GraphNodeKind, id: string): RecordGraph | n
     return { nodes: [...nodes.values()], edges: [...edges.values()] };
   });
 }
+
+export function countDemoRecords(): number {
+  return withReadDb((db) => {
+    const one = (sql: string) => get<{ n: number }>(db, sql)?.n ?? 0;
+    return (
+      one(`SELECT count(*) AS n FROM "Construct" WHERE "id" LIKE 'CON9%'`) +
+      one(`SELECT count(*) AS n FROM "Plasmid" WHERE "id" LIKE 'PL9%'`) +
+      one(`SELECT count(*) AS n FROM "Experiment" WHERE "id" LIKE 'EXP9%'`)
+    );
+  });
+}
