@@ -17,9 +17,9 @@ If you choose a different stack, keep the same phases and acceptance checks.
 
 ## Current Status
 
-Phases 0, 1, 2, 3, 4, 5, 6, 7, and 8 are complete. The runnable app scaffold, Prisma SQLite schema, seed/import workflow, relationship-tracing detail pages, create/edit forms, experiment-plasmid relationship management, file links with a GenBank metadata preview, a test suite, and a data-quality view live in `lab-db/`; the original mock files remain at the repository root.
+All phases (0 through 10) are complete. The runnable app scaffold, Prisma SQLite schema, seed/import workflow, relationship-tracing detail pages, create/edit forms, experiment-plasmid relationship management, file links with a GenBank metadata preview, a test suite, a data-quality view, product polish, and a submission README live in `lab-db/`; the original mock files remain at the repository root.
 
-Verified Phase 0 through Phase 8 state:
+Verified Phase 0 through Phase 10 state:
 
 - Next.js App Router + TypeScript scaffold exists in `lab-db/`.
 - Prisma is initialized for SQLite with `lab-db/prisma/schema.prisma` and `lab-db/prisma.config.ts`.
@@ -53,8 +53,10 @@ Verified Phase 0 through Phase 8 state:
 - Phase 8 adds a `node:test` + `tsx` runner (`npm test`, `npm run typecheck`) with 22 passing checks across `test/genbank.test.ts`, `test/seed.test.ts`, `test/relationships.test.ts`, and `test/validation.test.ts`; each file builds an isolated temp SQLite database from the migration SQL so `dev.db` is never touched.
 - Phase 8 also persists a seed-time data-quality report (`seed-report.json`, git-ignored) and surfaces it at `/data-quality`: imported records, skipped placeholder counts, the `from import` -> `CON000001` and `EXP_00001` -> `EXP000001` normalizations, and attached files.
 - File upload, delete, and editing remain out of scope; file display is read/download only.
+- Phase 9 polish: active-state primary navigation (`src/app/_components/main-nav.tsx`), a home-linked header with a non-phase-specific eyebrow, a rewritten dashboard hero describing relationship tracing, a FASTA-style protein-sequence viewer (10-aa groups with position markers), consistent page titles via a metadata template, a route-level loading state, and `break-words` on free-text. No console errors during normal use.
+- Phase 10: `lab-db/README.md` was rewritten as a submission README (summary, stack, data model, setup/seed/run/test, project structure, assumptions, known normalizations, future improvements). A clean-install verification passed end to end: remove generated state, `npm install`, `env RUST_BACKTRACE=full RUST_LOG=trace npx prisma migrate dev`, `npm run db:seed` (clean 1/1/1 data), `npm run lint`, `npm run typecheck`, `npm test` (22 pass), `npx prisma validate`, and a dev-server boot returning `200` for `/`, the three detail pages, `/data-quality`, and `/files/plasmid/1`.
 
-Next coding-agent task: start with Phase 9 only. Polish layout, empty/loading/error states, navigation, and readability for submission. Do not build upload flows or record deletion yet.
+The project is complete. There are no remaining phases; future work (file uploads, record deletion, richer GenBank rendering, global search, auth) is listed under "Future improvements" in `lab-db/README.md`.
 
 ## Phase 0: Repository And Stack Setup
 

@@ -4,7 +4,7 @@ For a phase-by-phase coding-agent runbook, use `CODING_AGENT_PHASES.md`. That fi
 
 ## What This Project Is
 
-This repository is a mock specification for a small lab database application. Phases 0, 1, 2, 3, 4, 5, 6, 7, and 8 have created a runnable Next.js scaffold, Prisma SQLite schema, verified seed/import workflow, read-only relationship-tracing pages, create/edit forms, experiment-plasmid relationship management, file links with a GenBank metadata preview, a test suite, and a data-quality view for constructs, plasmids, and experiments in `lab-db/`; the provided Excel, Word, and GenBank files remain at the repository root and define the domain, sample data, and expected relationships.
+This repository is a mock specification for a small lab database application. All phases (0 through 10) are complete: the runnable Next.js app in `lab-db/` provides a Prisma SQLite schema, a verified seed/import workflow, relationship-tracing list and detail pages, create/edit forms, experiment-plasmid relationship management, file links with a GenBank metadata preview, a test suite, a data-quality view, product polish, and a submission README. The provided Excel, Word, and GenBank files remain at the repository root and define the domain, sample data, and expected relationships.
 
 Your goal is to build a runnable web application that lets users view, edit, create, and trace relationships between:
 
@@ -63,7 +63,7 @@ Pick the stack you can finish confidently. A complete, polished small app is bet
 
 ## Current Repository Layout
 
-Phases 0, 1, 2, 3, 4, 5, 6, 7, and 8 are complete and should not be repeated.
+All phases (0 through 10) are complete and should not be repeated.
 
 ```text
 .
@@ -185,7 +185,11 @@ npm run lint
 npx prisma validate
 ```
 
-Phase 8 added a `node:test` + `tsx` runner and a data-quality view. `npm test` passes 22 checks across `test/genbank.test.ts`, `test/seed.test.ts` (runs the real seed against a temp database), `test/relationships.test.ts`, and `test/validation.test.ts`; every test file builds its own temporary SQLite database from the migration SQL and points `DATABASE_URL` at it, so `dev.db` is never corrupted. The seed now writes a git-ignored `seed-report.json` next to the database, and `/data-quality` displays the imported records, skipped placeholder counts, the `from import` -> `CON000001` and `EXP_00001` -> `EXP000001` normalizations, and the attached files. The next coding-agent handoff should complete Phase 9 only: product polish for submission. Keep uploads and record deletion for later phases.
+Phase 8 added a `node:test` + `tsx` runner and a data-quality view. `npm test` passes 22 checks across `test/genbank.test.ts`, `test/seed.test.ts` (runs the real seed against a temp database), `test/relationships.test.ts`, and `test/validation.test.ts`; every test file builds its own temporary SQLite database from the migration SQL and points `DATABASE_URL` at it, so `dev.db` is never corrupted. The seed now writes a git-ignored `seed-report.json` next to the database, and `/data-quality` displays the imported records, skipped placeholder counts, the `from import` -> `CON000001` and `EXP_00001` -> `EXP000001` normalizations, and the attached files.
+
+Phase 9 polished the interface within the existing design system: active-state primary navigation, a home-linked header, a rewritten dashboard hero that explains relationship tracing, a FASTA-style protein-sequence viewer (10-aa groups with position markers), consistent page titles via a metadata template, a route-level loading state, and `break-words` on free-text. Phase 10 rewrote `lab-db/README.md` as a submission README and verified the project from a clean install: remove generated state, `npm install`, `env RUST_BACKTRACE=full RUST_LOG=trace npx prisma migrate dev`, `npm run db:seed` (clean 1/1/1 data), `npm run lint`, `npm run typecheck`, `npm test` (22 pass), `npx prisma validate`, and a dev-server boot returning `200` for the dashboard, the three detail pages, `/data-quality`, and a file download.
+
+The project is complete; no phases remain. Future work (file uploads, record deletion, richer GenBank rendering, global search, auth) is listed under "Future improvements" in `lab-db/README.md`.
 
 ## Source Files And Their Meaning
 
