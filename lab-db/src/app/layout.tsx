@@ -34,7 +34,7 @@ export default function RootLayout({
             <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-mono text-xs font-semibold uppercase text-teal-700">
-                  Phase 0 scaffold
+                  Phase 5 CRUD
                 </p>
                 <h1 className="text-2xl font-semibold tracking-normal text-slate-950">
                   Lab Database
