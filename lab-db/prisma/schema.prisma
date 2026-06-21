@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,105 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+}
+
+model Construct {
+  id              String    @id
+  shortName       String?
+  proteinSequence String?
+  length          Int?
+  plasmids        Plasmid[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Plasmid {
+  id                  String    @id
+  name                String?
+  emptyVector         Boolean?
+  placeholderOnly     Boolean?
+  hasPlasmidPrep      Boolean?
+  hasGlycerolStock    Boolean?
+  vectorBackbone      String?
+  insertDescription   String?
+  guideRna            String?
+  plasmidType         String?
+  bacterialAntibiotic String?
+  mammalianAntibiotic String?
+  source              String?
+  mammalianPromoter   String?
+  bacterialOri        String?
+  createdBy           String?
+  createdOn           DateTime?
+  comments            String?
+  description         String?
+
+  constructId String?
+  construct   Construct? @relation(fields: [constructId], references: [id], onDelete: SetNull)
+
+  experimentLinks ExperimentPlasmid[]
+  files           PlasmidFile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([constructId])
+}
+
+model Experiment {
+  id            String    @id
+  owner         String?
+  type          String?
+  source        String?
+  externalParty String?
+  titleAim      String?
+  startDate     DateTime?
+  endDate       DateTime?
+  folderPath    String?
+  comments      String?
+
+  plasmidLinks ExperimentPlasmid[]
+  files        ExperimentFile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ExperimentPlasmid {
+  experimentId String
+  plasmidId    String
+
+  experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  plasmid    Plasmid    @relation(fields: [plasmidId], references: [id], onDelete: Cascade)
+
+  @@id([experimentId, plasmidId])
+  @@index([plasmidId])
+}
+
+model PlasmidFile {
+  id        Int     @id @default(autoincrement())
+  plasmidId String
+  fileName  String
+  filePath  String
+  fileType  String?
+  notes     String?
+
+  plasmid Plasmid @relation(fields: [plasmidId], references: [id], onDelete: Cascade)
+
+  @@unique([plasmidId, filePath])
+  @@index([plasmidId])
+}
+
+model ExperimentFile {
+  id           Int     @id @default(autoincrement())
+  experimentId String
+  fileName     String
+  filePath     String
+  fileType     String?
+  notes        String?
+
+  experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+
+  @@unique([experimentId, filePath])
+  @@index([experimentId])
 }
