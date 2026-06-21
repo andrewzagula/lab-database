@@ -17,9 +17,9 @@ If you choose a different stack, keep the same phases and acceptance checks.
 
 ## Current Status
 
-Phases 0, 1, 2, 3, 4, and 5 are complete. The runnable app scaffold, Prisma SQLite schema, seed/import workflow, relationship-tracing detail pages, and create/edit forms for constructs, plasmids, and experiments live in `lab-db/`; the original mock files remain at the repository root.
+Phases 0, 1, 2, 3, 4, 5, and 6 are complete. The runnable app scaffold, Prisma SQLite schema, seed/import workflow, relationship-tracing detail pages, create/edit forms, and experiment-plasmid relationship management live in `lab-db/`; the original mock files remain at the repository root.
 
-Verified Phase 0, Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5 state:
+Verified Phase 0, Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, and Phase 6 state:
 
 - Next.js App Router + TypeScript scaffold exists in `lab-db/`.
 - Prisma is initialized for SQLite with `lab-db/prisma/schema.prisma` and `lab-db/prisma.config.ts`.
@@ -46,9 +46,11 @@ Verified Phase 0, Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5 state:
 - Phase 5 mutations use Server Actions and parameterized Node `node:sqlite` writes in `src/lib/write-db.ts`; the app still does not instantiate `PrismaClient`.
 - Phase 5 validation covers required/unique IDs, `CON000001`/`PL000001`/`EXP000001` ID formats, valid dates, letters-only protein sequences, enum-like dropdown values, and existing construct references for plasmids.
 - Phase 5 browser verification created and edited `CON000002`, `PL000002`, and `EXP000002`, confirmed persistence after refresh, and confirmed Phase 4 seeded relationship pages still work.
-- File rows remain metadata/path display only; no relationship management, upload, delete, download, or file preview behavior has been added.
+- Phase 6 experiment detail pages link and unlink plasmids through `ExperimentPlasmid`. `src/lib/read-db.ts` adds `listPlasmidsNotInExperiment` (mapped to plain objects for the client selector), and `src/lib/write-db.ts` adds duplicate-safe `linkPlasmidToExperiment` / `unlinkPlasmidFromExperiment`; the add selector only offers plasmids that are not already linked.
+- Phase 6 verification linked `EXP000001` to a second plasmid through the real Server Action, confirmed the many-to-many path so `PL000001` appears in multiple experiments, confirmed the selector hides already-linked plasmids, and unlinked back to the seeded `EXP000001 -> PL000001` state.
+- File rows remain metadata/path display only; no upload, delete, download, or file preview behavior has been added.
 
-Next coding-agent task: start with Phase 6 only. Add relationship management through `ExperimentPlasmid`. Do not build upload flows or file previews yet.
+Next coding-agent task: start with Phase 7 only. Add file links and a basic GenBank metadata preview. Do not build upload flows or record deletion yet.
 
 ## Phase 0: Repository And Stack Setup
 

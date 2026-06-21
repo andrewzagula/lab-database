@@ -4,7 +4,7 @@ For a phase-by-phase coding-agent runbook, use `CODING_AGENT_PHASES.md`. That fi
 
 ## What This Project Is
 
-This repository is a mock specification for a small lab database application. Phases 0, 1, 2, 3, 4, and 5 have created a runnable Next.js scaffold, Prisma SQLite schema, verified seed/import workflow, read-only relationship-tracing pages, and create/edit forms for constructs, plasmids, and experiments in `lab-db/`; the provided Excel, Word, and GenBank files remain at the repository root and define the domain, sample data, and expected relationships.
+This repository is a mock specification for a small lab database application. Phases 0, 1, 2, 3, 4, 5, and 6 have created a runnable Next.js scaffold, Prisma SQLite schema, verified seed/import workflow, read-only relationship-tracing pages, create/edit forms, and experiment-plasmid relationship management for constructs, plasmids, and experiments in `lab-db/`; the provided Excel, Word, and GenBank files remain at the repository root and define the domain, sample data, and expected relationships.
 
 Your goal is to build a runnable web application that lets users view, edit, create, and trace relationships between:
 
@@ -63,7 +63,7 @@ Pick the stack you can finish confidently. A complete, polished small app is bet
 
 ## Current Repository Layout
 
-Phases 0, 1, 2, 3, 4, and 5 are complete and should not be repeated.
+Phases 0, 1, 2, 3, 4, 5, and 6 are complete and should not be repeated.
 
 ```text
 .
@@ -150,9 +150,20 @@ npm run dev -- --hostname 127.0.0.1 --port 3000
 
 Phase 5 browser verification passed for create/edit forms and validation on `/constructs/new`, `/constructs/CON000002/edit`, `/plasmids/new`, `/plasmids/PL000002/edit`, `/experiments/new`, and `/experiments/EXP000002/edit`. The browser flow created and edited `CON000002`, created and edited `PL000002` linked to `CON000002`, created and edited `EXP000002`, refreshed detail pages to confirm persistence, verified useful errors for invalid IDs, duplicate IDs, bad dates, invalid protein sequences, invalid dropdown values, and invalid construct references, and confirmed the Phase 4 seeded relationship paths still work. File rows remain metadata/path display only; no upload, delete, relationship management, download, or file preview behavior was added.
 
-The seed leaves exactly one meaningful construct, plasmid, experiment, experiment-plasmid link, plasmid file, and experiment file before Phase 5 UI verification. The Phase 5 verification run adds `CON000002`, `PL000002`, and `EXP000002` to the local ignored `lab-db/dev.db`. The next coding-agent handoff should complete Phase 6 only: relationship management through `ExperimentPlasmid`. Keep uploads and richer file preview/rendering for later phases.
+The seed leaves exactly one meaningful construct, plasmid, experiment, experiment-plasmid link, plasmid file, and experiment file before Phase 5 UI verification. The Phase 5 verification run adds `CON000002`, `PL000002`, and `EXP000002` to the local ignored `lab-db/dev.db`.
 
 Phase 5 data-access note: Prisma 7's generated `prisma-client` output requires a driver adapter when constructing `PrismaClient` directly. The app interface deliberately avoids direct PrismaClient construction and reads/writes `dev.db` through Node 22's built-in `node:sqlite` API in `lab-db/src/lib/read-db.ts` and `lab-db/src/lib/write-db.ts`.
+
+Verified Phase 6 commands from `lab-db/`:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Phase 6 added experiment-plasmid relationship management. The experiment detail page now has an add-plasmid selector (offering only plasmids not already linked) and a remove control on each linked row, backed by `listPlasmidsNotInExperiment`, `linkPlasmidToExperiment`, and `unlinkPlasmidFromExperiment`. Verification linked `EXP000001` to a second plasmid through the real Server Action, confirmed the many-to-many path so `PL000001` can appear in multiple experiments, confirmed duplicate links are prevented (the selector excludes already-linked plasmids and the write layer rejects duplicates), and unlinked back to the seeded `EXP000001 -> PL000001` state. The plasmid detail page continues to list every linked experiment. The next coding-agent handoff should complete Phase 7 only: file links and a basic GenBank metadata preview. Keep uploads and record deletion for later phases.
 
 ## Source Files And Their Meaning
 

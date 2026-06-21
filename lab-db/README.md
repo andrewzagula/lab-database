@@ -22,14 +22,14 @@ Complete:
 - Server Action mutations through parameterized Node `node:sqlite` writes
 - Form validation for required/unique IDs, ID formats, dates, protein sequences, dropdown values, and plasmid construct references
 - Route-level not-found states for missing detail records
+- Link and unlink plasmids to experiments through the `ExperimentPlasmid` join table from the experiment detail page, with duplicate-safe linking and construct context kept visible
 - Root mock files preserved outside this app folder
 
 Not started yet:
 
-- Relationship management
 - Upload flows
 - File previews/rendering
-- Delete actions
+- Delete actions for records
 
 ## Run Locally
 
@@ -128,13 +128,25 @@ Browser verification passed for create/edit forms and validation. The flow creat
 
 Phase 5 data-access decision: the app still does not instantiate `PrismaClient` because Prisma 7's generated client requires a driver adapter. Reads stay in `src/lib/read-db.ts`; writes use Server Actions and parameterized `node:sqlite` statements in `src/lib/write-db.ts`.
 
+Phase 6 verification passed with:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+The experiment detail page now manages `ExperimentPlasmid` links. `listPlasmidsNotInExperiment` feeds an add-plasmid selector that only offers plasmids not already linked, and each linked row has a remove control. The `linkPlasmidToExperiment` / `unlinkPlasmidFromExperiment` writes normalize IDs, block duplicate links, validate that both records exist, and revalidate the experiment, plasmid, list, and dashboard routes so relationship tables update immediately. Browser/action verification linked `EXP000001` to a second plasmid (`PL000001` + `PL000002`), confirmed the many-to-many path so `PL000001` appears in multiple experiments, confirmed the selector hides already-linked plasmids, and unlinked back to the seeded state. The plasmid detail page continues to list every linked experiment.
+
+Phase 6 data-access decision: relationship reads and writes follow the existing `node:sqlite` pattern; `ExperimentPlasmid` rows returned to the client selector are mapped to plain objects, matching `listConstructOptions`, because `node:sqlite` rows have a null prototype and cannot cross the Server/Client Component boundary.
+
 ## Next Handoff
 
-Complete Phase 6 only:
+Complete Phase 7 only:
 
-1. Add relationship management for experiments and plasmids through `ExperimentPlasmid`.
-2. Allow users to link and unlink existing plasmids from experiment detail pages.
-3. Prevent duplicate links and keep construct context visible in relationship tables.
-4. Keep upload flows and file previews out of Phase 6 unless explicitly requested.
+1. Add file links and a basic GenBank metadata preview for plasmid files.
+2. Show download links and parsed summary fields without building a full sequence editor.
+3. Keep upload flows and record deletion out of Phase 7 unless explicitly requested.
 
 Note: Prisma 7 uses `prisma.config.ts` to load `DATABASE_URL` from `.env` and to configure `npx prisma db seed`; keep that generated config pattern.
