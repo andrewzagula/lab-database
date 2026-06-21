@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --no-warnings --test \"test/**/*.test.ts\"",
     "db:seed": "prisma generate && node --no-warnings --experimental-sqlite prisma/seed.mjs"
   },
   "dependencies": {
@@ -25,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }
