@@ -4,7 +4,7 @@ For a phase-by-phase coding-agent runbook, use `CODING_AGENT_PHASES.md`. That fi
 
 ## What This Project Is
 
-This repository is a mock specification for a small lab database application. It is not an existing app yet. The provided Excel, Word, and GenBank files define the domain, sample data, and expected relationships.
+This repository is a mock specification for a small lab database application. Phases 0, 1, 2, 3, 4, and 5 have created a runnable Next.js scaffold, Prisma SQLite schema, verified seed/import workflow, read-only relationship-tracing pages, and create/edit forms for constructs, plasmids, and experiments in `lab-db/`; the provided Excel, Word, and GenBank files remain at the repository root and define the domain, sample data, and expected relationships.
 
 Your goal is to build a runnable web application that lets users view, edit, create, and trace relationships between:
 
@@ -60,6 +60,99 @@ Alternative acceptable stacks:
 - Rails + SQLite.
 
 Pick the stack you can finish confidently. A complete, polished small app is better than an ambitious unfinished one.
+
+## Current Repository Layout
+
+Phases 0, 1, 2, 3, 4, and 5 are complete and should not be repeated.
+
+```text
+.
+├── lab-db/                         # Next.js TypeScript app scaffold
+│   ├── prisma/schema.prisma         # Prisma SQLite domain schema
+│   ├── prisma/seed.mjs              # Phase 2 idempotent mock-data seed import
+│   ├── prisma/migrations/           # Initial SQLite migration
+│   ├── prisma.config.ts             # Prisma 7 config loading DATABASE_URL and seed command
+│   └── src/app/                     # Phase 5 dashboard/list/detail/form routes
+├── CON_mock.xlsx
+├── PL_mock.xlsx
+├── EXP_mock.xlsx
+├── Plasmid Files/Example_PL000001.gb
+├── Experiment Folders/EXP000001_mock/EXP1_mock.docx
+├── readme.docx
+├── TAKE_HOME_PROJECT_GUIDE.md
+└── CODING_AGENT_PHASES.md
+```
+
+Verified Phase 0 commands from `lab-db/`:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Verified Phase 1 commands from `lab-db/`:
+
+```bash
+npx prisma format
+env RUST_BACKTRACE=full RUST_LOG=trace npx prisma migrate dev --name init
+npx prisma validate
+npm run lint
+npx tsc --noEmit
+npx prisma migrate status
+sqlite3 dev.db ".tables"
+```
+
+Verified Phase 2 commands from `lab-db/`:
+
+```bash
+npm run db:seed
+npm run db:seed
+npx prisma db seed
+sqlite3 dev.db 'select "Construct", count(*) from Construct union all select "Plasmid", count(*) from Plasmid union all select "Experiment", count(*) from Experiment union all select "ExperimentPlasmid", count(*) from ExperimentPlasmid union all select "PlasmidFile", count(*) from PlasmidFile union all select "ExperimentFile", count(*) from ExperimentFile;'
+sqlite3 dev.db 'select p.id, p.constructId, ep.experimentId, pf.filePath, ef.filePath from Plasmid p join ExperimentPlasmid ep on ep.plasmidId = p.id join PlasmidFile pf on pf.plasmidId = p.id join ExperimentFile ef on ef.experimentId = ep.experimentId;'
+npx prisma validate
+npm run lint
+npx tsc --noEmit
+```
+
+Verified Phase 3 commands from `lab-db/`:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Phase 3 browser verification passed for `/`, `/constructs`, `/plasmids`, and `/experiments`. The dashboard showed one construct, one plasmid, and one experiment. The list pages showed `CON000001` with plasmid count `1`, `PL000001` linked to `CON000001` with experiment count `1`, and `EXP000001` with plasmid count `1`. Search empty states worked, and detail routes loaded Phase 4 placeholders before the Phase 4 implementation.
+
+Verified Phase 4 commands from `lab-db/`:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Phase 4 browser verification passed for `/constructs/CON000001`, `/plasmids/PL000001`, `/experiments/EXP000001`, and missing route `/constructs/CON999999`. The detail pages show relationship-tracing data from the seeded SQLite database. The seeded path works both ways: `/experiments/EXP000001 -> PL000001 -> CON000001` and `/constructs/CON000001 -> PL000001 -> EXP000001`. The missing route returns the route-level not-found state. No CRUD, relationship management, upload, download, or file preview behavior was added.
+
+Verified Phase 5 commands from `lab-db/`:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Phase 5 browser verification passed for create/edit forms and validation on `/constructs/new`, `/constructs/CON000002/edit`, `/plasmids/new`, `/plasmids/PL000002/edit`, `/experiments/new`, and `/experiments/EXP000002/edit`. The browser flow created and edited `CON000002`, created and edited `PL000002` linked to `CON000002`, created and edited `EXP000002`, refreshed detail pages to confirm persistence, verified useful errors for invalid IDs, duplicate IDs, bad dates, invalid protein sequences, invalid dropdown values, and invalid construct references, and confirmed the Phase 4 seeded relationship paths still work. File rows remain metadata/path display only; no upload, delete, relationship management, download, or file preview behavior was added.
+
+The seed leaves exactly one meaningful construct, plasmid, experiment, experiment-plasmid link, plasmid file, and experiment file before Phase 5 UI verification. The Phase 5 verification run adds `CON000002`, `PL000002`, and `EXP000002` to the local ignored `lab-db/dev.db`. The next coding-agent handoff should complete Phase 6 only: relationship management through `ExperimentPlasmid`. Keep uploads and richer file preview/rendering for later phases.
+
+Phase 5 data-access note: Prisma 7's generated `prisma-client` output requires a driver adapter when constructing `PrismaClient` directly. The app interface deliberately avoids direct PrismaClient construction and reads/writes `dev.db` through Node 22's built-in `node:sqlite` API in `lab-db/src/lib/read-db.ts` and `lab-db/src/lib/write-db.ts`.
 
 ## Source Files And Their Meaning
 

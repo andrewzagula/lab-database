@@ -15,7 +15,44 @@ Recommended stack:
 
 If you choose a different stack, keep the same phases and acceptance checks.
 
+## Current Status
+
+Phases 0, 1, 2, 3, 4, and 5 are complete. The runnable app scaffold, Prisma SQLite schema, seed/import workflow, relationship-tracing detail pages, and create/edit forms for constructs, plasmids, and experiments live in `lab-db/`; the original mock files remain at the repository root.
+
+Verified Phase 0, Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5 state:
+
+- Next.js App Router + TypeScript scaffold exists in `lab-db/`.
+- Prisma is initialized for SQLite with `lab-db/prisma/schema.prisma` and `lab-db/prisma.config.ts`.
+- Phase 0 shell routes exist for `/`, `/constructs`, `/plasmids`, and `/experiments`.
+- `npm run lint`, `npx tsc --noEmit`, and `npx prisma validate` pass from `lab-db/`.
+- `npm run dev -- --hostname 127.0.0.1 --port 3000` boots the app, and browser verification passed for the Phase 0 routes.
+- Prisma models now exist for constructs, plasmids, experiments, plasmid files, experiment files, and `ExperimentPlasmid`.
+- Initial migration `20260620032945_init` was created and applied to local SQLite database `lab-db/dev.db`.
+- `npx prisma migrate status` reports one migration and an up-to-date database schema.
+- `lab-db/prisma/seed.mjs` imports the meaningful mock records from `CON_mock.xlsx`, `PL_mock.xlsx`, and `EXP_mock.xlsx`.
+- `npm run db:seed` runs Prisma generation and the Phase 2 seed import.
+- `npx prisma db seed` is wired through `lab-db/prisma.config.ts` and runs the same seed workflow.
+- Running `npm run db:seed` twice leaves exactly one construct, plasmid, experiment, experiment-plasmid link, plasmid file, and experiment file in `dev.db`.
+- Seeded relationships are `EXP000001 -> PL000001 -> CON000001`, with file links to `../Plasmid Files/Example_PL000001.gb` and `../Experiment Folders/EXP000001_mock/EXP1_mock.docx`.
+- Known issue: `npm install` reported dependency audit findings. Do not address these during Phase 3 unless they directly block read-only page work.
+- Local toolchain note: plain `npx prisma migrate dev --name init` returned a generic schema-engine error in this environment, but the same migration completed with `env RUST_BACKTRACE=full RUST_LOG=trace npx prisma migrate dev --name init`.
+- Phase 3 read-only app pages fetch from `dev.db` through `src/lib/read-db.ts`, using Node 22's built-in `node:sqlite` API with read-only parameterized SQL instead of constructing PrismaClient without an adapter.
+- `/` shows counts, quick links, and relationship health checks for seeded records.
+- `/constructs`, `/plasmids`, and `/experiments` show real list tables, query-param search controls, seeded records, row links, and empty states.
+- `/constructs/[id]`, `/plasmids/[id]`, and `/experiments/[id]` show real read-only detail pages backed by `src/lib/read-db.ts`.
+- Seeded relationship tracing works both ways: `/experiments/EXP000001 -> PL000001 -> CON000001` and `/constructs/CON000001 -> PL000001 -> EXP000001`.
+- Missing detail records show route-level not-found states.
+- Phase 5 create/edit routes exist for constructs, plasmids, and experiments.
+- Phase 5 mutations use Server Actions and parameterized Node `node:sqlite` writes in `src/lib/write-db.ts`; the app still does not instantiate `PrismaClient`.
+- Phase 5 validation covers required/unique IDs, `CON000001`/`PL000001`/`EXP000001` ID formats, valid dates, letters-only protein sequences, enum-like dropdown values, and existing construct references for plasmids.
+- Phase 5 browser verification created and edited `CON000002`, `PL000002`, and `EXP000002`, confirmed persistence after refresh, and confirmed Phase 4 seeded relationship pages still work.
+- File rows remain metadata/path display only; no relationship management, upload, delete, download, or file preview behavior has been added.
+
+Next coding-agent task: start with Phase 6 only. Add relationship management through `ExperimentPlasmid`. Do not build upload flows or file previews yet.
+
 ## Phase 0: Repository And Stack Setup
+
+**Status:** Complete as of the Phase 0 run. Keep this section as historical context.
 
 ### Goal
 
@@ -47,11 +84,11 @@ Do not implement the full product yet. Focus on setup, app boot, Prisma initiali
 ### Suggested Commands
 
 ```bash
-npx create-next-app@latest lab-db --ts
+npx create-next-app@latest lab-db --yes --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --turbopack --use-npm
 cd lab-db
 npm install prisma @prisma/client xlsx
 npx prisma init --datasource-provider sqlite
-npm run dev
+npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
 If you create the app at the repository root instead of `lab-db/`, make sure the mock files remain available and your README explains the layout.
@@ -69,6 +106,24 @@ If you create the app at the repository root instead of `lab-db/`, make sure the
 Stop after the app boots. Do not start schema/import work until the setup is verified.
 
 ## Phase 1: Database Schema
+
+**Status:** Complete as of the Phase 1 run. Keep this section as historical context.
+
+### Starting Context
+
+Begin in `lab-db/`. The app uses Prisma 7, so `prisma.config.ts` supplies `DATABASE_URL` from `.env`; the Prisma schema keeps the existing SQLite datasource and now contains the real data models for this phase.
+
+Use the schema from `TAKE_HOME_PROJECT_GUIDE.md` as the starting point. Phase 1 replaced the generated placeholder schema with real models and ran the initial migration.
+
+### Handoff Prompt
+
+```text
+Read TAKE_HOME_PROJECT_GUIDE.md and CODING_AGENT_PHASES.md. Phase 0 is already complete in lab-db/. Complete Phase 1 only.
+
+In lab-db/, implement the Prisma schema for constructs, plasmids, experiments, plasmid files, experiment files, and the ExperimentPlasmid join table. Preserve the existing Next.js scaffold and root mock files. Use SQLite with the existing Prisma 7 config. Run prisma format and the initial migration. Verify the relations are present and the SQLite database is created. Stop after Phase 1; do not write seed/import code or UI data pages yet.
+
+Before finishing, summarize changed files, commands run, verification results, and any remaining issues.
+```
 
 ### Goal
 
@@ -117,15 +172,21 @@ Experiment 1 -> many ExperimentFiles
 
 ```bash
 npx prisma format
-npx prisma migrate dev --name init
-npx prisma studio
+env RUST_BACKTRACE=full RUST_LOG=trace npx prisma migrate dev --name init
+npx prisma validate
+npm run lint
+npx tsc --noEmit
+npx prisma migrate status
+sqlite3 dev.db ".tables"
 ```
 
 ### Stop Point
 
-Stop after the schema is migrated and visible in Prisma Studio.
+Stop after the schema is migrated and verified. Prisma Studio was not launched during the Phase 1 handoff because non-interactive verification covered the migration and relations.
 
 ## Phase 2: Seed And Import Mock Data
+
+**Status:** Complete as of the Phase 2 run. Keep this section as historical context.
 
 ### Goal
 
@@ -173,13 +234,26 @@ EXP000001 folder -> Experiment Folders/EXP000001_mock/
 
 ```bash
 npm run db:seed
-npx prisma studio
+npm run db:seed
+npx prisma db seed
+sqlite3 dev.db 'select "Construct", count(*) from Construct union all select "Plasmid", count(*) from Plasmid union all select "Experiment", count(*) from Experiment union all select "ExperimentPlasmid", count(*) from ExperimentPlasmid union all select "PlasmidFile", count(*) from PlasmidFile union all select "ExperimentFile", count(*) from ExperimentFile;'
+sqlite3 dev.db 'select p.id, p.constructId, ep.experimentId, pf.filePath, ef.filePath from Plasmid p join ExperimentPlasmid ep on ep.plasmidId = p.id join PlasmidFile pf on pf.plasmidId = p.id join ExperimentFile ef on ef.experimentId = ep.experimentId;'
+npx prisma validate
+npm run lint
+npx tsc --noEmit
 ```
 
-Optional verification query:
+Verified Phase 2 results:
 
-```bash
-npx prisma db seed
+```text
+Construct|1
+Plasmid|1
+Experiment|1
+ExperimentPlasmid|1
+PlasmidFile|1
+ExperimentFile|1
+
+PL000001|CON000001|EXP000001|../Plasmid Files/Example_PL000001.gb|../Experiment Folders/EXP000001_mock/EXP1_mock.docx
 ```
 
 ### Stop Point
@@ -188,6 +262,8 @@ Stop after the database contains the correctly linked sample data.
 
 ## Phase 3: Read-Only App Shell And List Pages
 
+**Status:** Complete as of the Phase 3 run. Keep this section as historical context.
+
 ### Goal
 
 Build the first usable read-only interface.
@@ -195,10 +271,14 @@ Build the first usable read-only interface.
 ### Agent Prompt
 
 ```text
-Build the read-only app interface for the lab database. Add navigation and list pages for constructs, plasmids, and experiments. Each page should fetch real data from Prisma and display useful columns, search/filter controls, empty states, and links to detail pages.
+Build the read-only app interface for the lab database. Add navigation and list pages for constructs, plasmids, and experiments. Each page should fetch real data from the seeded SQLite database and display useful columns, search/filter controls, empty states, and links to detail pages.
 
 Keep the design clean, operational, and scientific. Avoid a marketing landing page.
 ```
+
+### Data Access Decision
+
+Prisma 7's generated `prisma-client` output requires a driver adapter when constructing `PrismaClient` directly. Phase 3 did not add a Prisma SQLite adapter dependency. The app uses `src/lib/read-db.ts` to resolve `DATABASE_URL="file:./dev.db"` and execute read-only parameterized SQL through Node 22's built-in `node:sqlite` API with `readOnly: true` and `PRAGMA query_only = ON`.
 
 ### Required Routes
 
@@ -256,16 +336,34 @@ Experiments:
 
 ### Verification
 
-- Run `npm run dev`.
-- Open the app in a browser.
-- Visit each list page.
-- Confirm seeded data appears.
+Verified with:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Browser verification passed:
+
+- `/` showed counts of one construct, one plasmid, and one experiment, plus quick links to `CON000001`, `PL000001`, and `EXP000001`.
+- `/constructs` showed `CON000001`, short name `example`, length `1447`, and plasmid count `1`.
+- `/plasmids` showed `PL000001`, name `example`, type `MAMMALIAN`, source `ADDGENE`, linked construct `CON000001`, and experiment count `1`.
+- `/experiments` showed `EXP000001`, title `Example Experiment`, owner `Nick, Martyn`, type `INSILICO`, start date `2026-06-15`, and plasmid count `1`.
+- `/constructs?q=not-a-real-record` showed the no-match empty state.
+- `/constructs/CON000001`, `/plasmids/PL000001`, and `/experiments/EXP000001` loaded Phase 4 placeholder detail pages.
+- Browser console verification reported no errors.
+
+Local environment notes: the first sandboxed dev-server start returned `listen EPERM` for `127.0.0.1:3000`; rerunning the same command with approved local port-binding permissions succeeded. Node logs an expected experimental warning for `node:sqlite`.
 
 ### Stop Point
 
 Stop after list pages are complete and readable.
 
 ## Phase 4: Detail Pages And Relationship Tracing
+
+**Status:** Complete as of the Phase 4 run. Keep this section as historical context.
 
 ### Goal
 
@@ -337,18 +435,40 @@ Experiment detail:
 
 ### Verification
 
-Manually verify:
+Verified with:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Browser verification passed for:
+
+```text
+/constructs/CON000001
+/plasmids/PL000001
+/experiments/EXP000001
+/constructs/CON999999
+```
+
+The seeded relationship paths work both ways:
 
 ```text
 /experiments/EXP000001 -> PL000001 -> CON000001
 /constructs/CON000001 -> PL000001 -> EXP000001
 ```
 
+The missing route returned the custom not-found UI with a 404 response. The verified pages had content, no Next.js error overlay, and no browser page errors. File rows remain metadata/path display only; no file preview or rendering behavior was added.
+
 ### Stop Point
 
 Stop after relationship tracing works end to end.
 
 ## Phase 5: Create And Edit Forms
+
+**Status:** Complete as of the Phase 5 run. Keep this section as historical context.
 
 ### Goal
 
@@ -449,7 +569,26 @@ CMV, CAG, UBC
 
 ### Verification
 
-Create a second construct, plasmid, and experiment manually through the UI. Refresh the app and confirm they persist.
+Verified with:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npx prisma validate
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Browser verification passed:
+
+- `/constructs/new` showed useful errors for bad construct ID, duplicate construct ID, and invalid protein sequence.
+- `CON000002` was created, edited on `/constructs/CON000002/edit`, refreshed, and remained persisted.
+- `/plasmids/new` showed useful errors for invalid construct references and invalid dropdown values.
+- `PL000002` was created linked to `CON000002`, edited on `/plasmids/PL000002/edit`, refreshed, and remained persisted.
+- `/experiments/new` showed useful errors for invalid dates and invalid dropdown values.
+- `EXP000002` was created, edited on `/experiments/EXP000002/edit`, refreshed, and remained persisted.
+- Seeded Phase 4 relationship tracing still worked: `/experiments/EXP000001 -> PL000001 -> CON000001` and `/constructs/CON000001 -> PL000001 -> EXP000001`.
+- Existing file metadata remained display-only with no upload controls.
+- Final browser run reported no console errors or page errors.
 
 ### Stop Point
 
